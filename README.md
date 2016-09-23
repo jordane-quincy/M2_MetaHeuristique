@@ -9,7 +9,7 @@ s.c
 	x1, x2, x3, x4 € { 0, 1 }
 
 nb de variables : n =  4
-nb de contraintes : n = 3
+nb de contraintes : m = 3
 
 		mkp
 un entier n
