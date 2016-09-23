@@ -1,7 +1,9 @@
 # depslib dependency file v1.0
-1474636321 source:c:\users\pc-jb\onedrive\documents\master 2\cours\s1\métaheuristique\git\td\main.c
+1474637670 source:c:\users\pc-jb\onedrive\documents\master 2\cours\s1\métaheuristique\git\td\main.c
 	"mkpkit.h"
 	"mkpsol.h"
+	"stdio.h"
+	"stdlib.h"
 
 1474634302 c:\users\pc-jb\onedrive\documents\master 2\cours\s1\métaheuristique\git\td\mkpkit.h
 	<stdio.h>

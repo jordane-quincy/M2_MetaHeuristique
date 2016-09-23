@@ -1,5 +1,7 @@
 #include "mkpkit.h"
 #include "mkpsol.h"
+#include "stdio.h"
+#include "stdlib.h"
 
 typedef struct {
      int indexObj;
@@ -8,40 +10,57 @@ typedef struct {
 
 ObjRatio* alloc_tab(int nbrVar) {
     ObjRatio *tab;
-    tab = (ObjRatio *)malloc(sizeof (ObjRatio) * nbrVar);
+    tab = (ObjRatio *)malloc(sizeof (ObjRatio) * (nbrVar + 1));
     return tab;
 }
 
-ObjRatio* getTableauOrdonne (Mkp mkp, ObjRatio* tabOrdonne) {
+
+int compareRatio (const void * a, const void * b)
+{
+    if (((ObjRatio*)a)->ratio < ((ObjRatio*)b)->ratio) {
+        return 1;
+    }
+    else if (((ObjRatio*)a)->ratio > ((ObjRatio*)b)->ratio) {
+        return -1;
+    }
+    return 0;
+}
+
+int* getTableauOrdonne (Mkp *mkp, int* ordre) {
+    ObjRatio *tabOrdonne;
+    tabOrdonne = alloc_tab(mkp->n);
+
     int i;
     int j;
-    for (i = 1; i <= mkp.n; i++) {
-        ObjRatio objRatio;
-        objRatio.indexObj = i;
-        double coefObj = mkp.a[0][i];
+    for (i = 1; i <= mkp->n; i++) {
+        double coefObj = mkp->a[0][i];
         double poidsObj = 0;
-        for (j = 1; j <= mkp.m; j++) {
-            poidsObj += mkp.a[j][i];
+        for (j = 1; j <= mkp->m; j++) {
+            poidsObj += mkp->a[j][i];
         }
-        objRatio.ratio = coefObj/poidsObj;
-
+        tabOrdonne[i].indexObj = i;
+        tabOrdonne[i].ratio = coefObj/poidsObj;
     }
-    return tabOrdonne;
+    qsort((void *)(tabOrdonne + 1), (size_t) mkp->n, (size_t)sizeof(ObjRatio), compareRatio);
+    for (j = 1; j<= mkp->n; j++) {
+        ordre[j] = tabOrdonne[j].indexObj;
+    }
+    return ordre;
 }
 
 int main(int argc, char *argv[]) {
 	Mkp *mkp;
 	Solution *s;
-	ObjRatio *tabOrdonne;
+	int *ordre;
 
 	if(argc != 2) {
 		printf("Usage: programme fichier\n");
 		exit(0);
 	}
 	mkp = load_mkp(argv[1]);
-    tabOrdonne = alloc_tab(mkp->n);
-	tabOrdonne = getTableauOrdonne(*mkp, tabOrdonne);
-
+	printf("%d", mkp->n);
+	ordre = (int *)malloc(sizeof (int) * (mkp->n + 1));
+    ordre = getTableauOrdonne(mkp, ordre);
 	/*save_mkp(mkp, "verif.txt");
 
 	s = alloc_sol(mkp);
