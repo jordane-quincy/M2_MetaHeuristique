@@ -57,7 +57,6 @@ int main(int argc, char *argv[]) {
 	Solution *s;
 	int *ordre;
 	int i;
-
 	if(argc != 2) {
 		printf("Usage: programme fichier\n");
 		exit(0);
@@ -72,20 +71,8 @@ int main(int argc, char *argv[]) {
             Add(mkp, s, ordre[i]);
         }
     }
-
     printf("obj = %d\n", s->objValue);
-
-
-	/*save_mkp(mkp, "verif.txt");
-
-	s = alloc_sol(mkp);
-	Add(mkp, s, 1);
-	Add(mkp, s, 10);
-	printf("obj= %d\n", s->objValue);
-	Drop(mkp, s, 10);
-	printf("obj= %d\n", s->objValue);
-
-	free_sol(s);*/
+	free_sol(s);
 	del_mkp(mkp);
 
 	return 0;
