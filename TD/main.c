@@ -60,16 +60,22 @@ Solution *parcoursVoisin (Mkp *mkp, Solution *s) {
         if (copieS->x[i] == 1) {//Si on a pris l'objet i dans la solution
             //On l'enlève
             Drop(mkp, copieS, i);
+            //Puis on reparcours la liste des objets pour savoir quel objet remettre
             for (j = 1; j <= mkp->n; j++) {
+                //Si l'objet j n'est pas dans le sac, et qu'on peut l'ajouter en respectant les contraintes et que ce n'est pas l'objet qu'on vient de retirer
                 if (copieS->x[j] == 0 && Is_Add_F(mkp, copieS, j) == 1 && j != i) {
+                    //Alors on ajoute dans le sac
                     Add(mkp, copieS, j);
+                    //On regarde si cette nouvelle solution est améliorante
                     if (copieS->objValue > s->objValue) {
+                        //Si oui, on parcours les voisins de la nouvelle solution afin de retrouver une potentielle autre solution améliorante.
                         return parcoursVoisin(mkp, copieS);
                     }
                 }
             }
         }
     }
+    //return de la solution
     return s;
 }
 
