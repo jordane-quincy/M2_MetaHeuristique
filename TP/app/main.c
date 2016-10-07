@@ -82,6 +82,14 @@ Solution *parcoursVoisin (Mkp *mkp, Solution *s) {
     return s;
 }
 
+/**
+output_best_solution : Génération du fichier texte de sortie.
+s : La meilleure solution trouvée.
+*/
+void output_best_solution(Solution s){
+
+}
+
 int main(int argc, char *argv[]) {
 	Mkp *mkp;
 	Solution *s;
