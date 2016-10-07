@@ -66,6 +66,7 @@ Solution *parcoursVoisin (Mkp *mkp, Solution *s) {
                 //et si la valeur (dans la fonction objectif) de l'objet qu'on veut tenter d'ajouter est supérieur à celui qu'on vient de retirer
                 //et qu'on peut l'ajouter en respectant les contraintes
                 if (j != i && copieS->x[j] == 0 && mkp->a[0][j] > mkp->a[0][i] && Is_Add_F(mkp, copieS, j) == 1) {
+                    printf("DROP/ADD\n");
                     //Alors on ajoute dans le sac
                     Add(mkp, copieS, j);
                     //On regarde si cette nouvelle solution est améliorante
