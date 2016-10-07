@@ -86,8 +86,21 @@ Solution *parcoursVoisin (Mkp *mkp, Solution *s) {
 output_best_solution : Génération du fichier texte de sortie.
 s : La meilleure solution trouvée.
 */
-void output_best_solution(Solution s){
+void output_best_solution(Solution *s, char *nomFichierEntree, int nbVariables, char *nomFichierSortie){
+    FILE* fichier = fopen(nomFichierSortie, "w+"); // option "w+" afin de reset le fichier si présent
 
+    //si on a bien un pointeur vers le fichier
+    if(fichier != NULL){
+        // ligne 1 : nom du fichier en entrée
+        fprintf(fichier, "%s\n", nomFichierEntree);
+        // ligne 2 : nb variables
+        fprintf(fichier, "%d\n", nbVariables);
+
+        // fermeture du fichier
+        fclose(fichier);
+    } else {
+        printf("Impossible d'écrire le fichier de sortie : %s", nomFichierSortie);
+    }
 }
 
 int main(int argc, char *argv[]) {
@@ -96,8 +109,8 @@ int main(int argc, char *argv[]) {
 	Solution *sAmeliorante;
 	int *ordre;
 	int i;
-	if(argc != 2) {
-		printf("Usage: programme fichier\n");
+	if(argc != 3) {
+		printf("Usage: programme nomFichierEntree nomFichierSortie\n");
 		exit(0);
 	}
 	mkp = load_mkp(argv[1]);
@@ -113,11 +126,11 @@ int main(int argc, char *argv[]) {
 
     sAmeliorante = parcoursVoisin(mkp, s);
 
-
     printf("Ancienne value du sac : %d\n", s->objValue);
     free_sol(s);
     if (sAmeliorante != NULL) {
         printf("Nouvelle value du sac : %d\n", sAmeliorante->objValue);
+        output_best_solution(sAmeliorante,argv[1],mkp->n,argv[2]);
         free_sol(sAmeliorante);
     }
     else {
