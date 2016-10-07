@@ -21,6 +21,4 @@ typedef struct {
 
 		 void Drop(Mkp *mkp, Solution *sol, int j);			/* retire l'objet j de la solution j */
 
-		 Solution *copieSolution (Mkp *mkp, Solution *sol);  /* effectue une copie d'une solution */
-
 #endif

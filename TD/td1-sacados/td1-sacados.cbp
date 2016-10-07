@@ -11,6 +11,7 @@
 				<Option object_output="obj/Debug/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
+				<Option parameters="100mknap1.dat" />
 				<Compiler>
 					<Add option="-g" />
 				</Compiler>
@@ -37,9 +38,11 @@
 		<Unit filename="../mkpkit.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="../mkpkit.h" />
 		<Unit filename="../mkpsol.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="../mkpsol.h" />
 		<Extensions>
 			<code_completion />
 			<envvars />

@@ -105,19 +105,3 @@ retourne 1 si l'ajout de l'objet j dans la solution est faisable, 0 sinon
       }
       (sol->x[0])--;
    }
-
-/************************************************************************
-               Copie d'une solution
-************************************************************************/
-    Solution *copieSolution (Mkp *mkp, Solution *sol) {
-        int i;
-        Solution *copie = alloc_sol(mkp);
-        copie->objValue = sol->objValue;
-        for (i = 0; i <= mkp->n; i++) {
-            copie->x[i] = sol->x[i];
-        }
-        for (i = 0; i <= mkp->m; i++) {
-            copie->slack[i] = sol->slack[i];
-        }
-        return copie;
-    }
