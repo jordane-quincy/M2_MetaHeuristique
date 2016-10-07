@@ -62,8 +62,10 @@ Solution *parcoursVoisin (Mkp *mkp, Solution *s) {
             Drop(mkp, copieS, i);
             //Puis on reparcours la liste des objets pour savoir quel objet remettre
             for (j = 1; j <= mkp->n; j++) {
-                //Si l'objet j n'est pas dans le sac, et qu'on peut l'ajouter en respectant les contraintes et que ce n'est pas l'objet qu'on vient de retirer
-                if (copieS->x[j] == 0 && Is_Add_F(mkp, copieS, j) == 1 && j != i) {
+                //Si l'objet n'est pas celui qu'on vient de retirer et si l'objet j n'est pas dans le sac,
+                //et si la valeur (dans la fonction objectif) de l'objet qu'on veut tenter d'ajouter est supérieur à celui qu'on vient de retirer
+                //et qu'on peut l'ajouter en respectant les contraintes
+                if (j != i && copieS->x[j] == 0 && mkp->a[0][j] > mkp->a[0][i] && Is_Add_F(mkp, copieS, j) == 1) {
                     //Alors on ajoute dans le sac
                     Add(mkp, copieS, j);
                     //On regarde si cette nouvelle solution est améliorante
