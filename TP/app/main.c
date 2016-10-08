@@ -85,8 +85,12 @@ Solution *parcoursVoisin (Mkp *mkp, Solution *s) {
 /**
 output_best_solution : Génération du fichier texte de sortie.
 s : La meilleure solution trouvée.
+nomFichierEntree : Le nom du fichier en entrée ainsi que son extension.
+nbVariables : Le nombre de variables (d'objets) manipulées.
+nomFichierSortie : Le nom du fichier de sortie ainsi que son extension.
 */
 void output_best_solution(Solution *s, char *nomFichierEntree, int nbVariables, char *nomFichierSortie){
+    int j;
     FILE* fichier = fopen(nomFichierSortie, "w+"); // option "w+" afin de reset le fichier si présent
 
     //si on a bien un pointeur vers le fichier
@@ -95,11 +99,18 @@ void output_best_solution(Solution *s, char *nomFichierEntree, int nbVariables, 
         fprintf(fichier, "%s\n", nomFichierEntree);
         // ligne 2 : nb variables
         fprintf(fichier, "%d\n", nbVariables);
+        // ligne 3 : valeur de xj pour chaque j de N (1 si l'objet est pris, 0 sinon)
+        for (j = 1; j <= nbVariables; j++) {
+            fprintf(fichier, "%d ", s->x[j]);
+        }
+        fprintf(fichier, "\n");
+        // ligne 4 : valeur de la solution
+        fprintf(fichier, "%d", s->objValue);
 
         // fermeture du fichier
         fclose(fichier);
     } else {
-        printf("Impossible d'écrire le fichier de sortie : %s", nomFichierSortie);
+        printf("Impossible d'ecrire le fichier de sortie : %s", nomFichierSortie);
     }
 }
 
