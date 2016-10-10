@@ -43,3 +43,12 @@ un tableau slack (ce qui reste comme places libres dans le sac)
 | Si valeur négative ici == nombre de contraintes non respectée (must be avoided !)
 
 
+Good evening gentlmen,
+Voila j'ai mis en place la premiere partie de mon vaste plan mwahahahah
+heum heum, plus serieusement les nouveaux fichiers peuvent maintenant être lus ex: 100Md5_1_1_pos.
+Pour ça utiliser les nouveaux fichiers commencant par tp_.
+
+Il me reste pour cette premiere partie à modifier les fonctions du tp_mkpsol pour réalouer correctement la solution.
+Je ferais ca jeudi soir je pense.
+Ensuite vendredi soir ou jeudi peut etre meme je jeterais un coup d'oeil pour résoudre le probleme des demande.
+Sur ce messieurs bonne nuit mwahahah.
