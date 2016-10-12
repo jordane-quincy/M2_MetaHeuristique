@@ -6,7 +6,7 @@
 typedef struct {
      int objValue ;
      int *x;
-     int *slack;
+     int **slack;
 } Solution;
 
         Solution *tp_alloc_sol(tp_Mkp *mkp);						/* allocation memoire d'une solution pour le mkp */
