@@ -53,8 +53,6 @@
       sol->slack[0][0] = 0;
       for(i = 1; i <= mkp->cd; i++) sol->slack[1][i] = mkp->a[mkp->cd + i][0];
       sol->slack[1][0] = 0;
-      for(i = 1; i <= mkp->cc; i++) printf("slack[0][%d]= %d\n", i, sol->slack[0][i]);
-      for(i = 1; i <= mkp->cd; i++) printf("slack[1][%d]= %d\n", i, sol->slack[1][i]);
       for(i=0; i<=mkp->n; i++) sol->x[i] = 0;
       sol->objValue = 0;
    }
