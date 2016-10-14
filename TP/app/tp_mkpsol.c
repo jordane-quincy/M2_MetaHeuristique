@@ -68,9 +68,11 @@ retourne 1 si l'ajout de l'objet j dans la solution est faisable, 0 sinon
          printf("Verification si ajout possible mais variable deja a 1 !\n");
          return 0;
       }
+      //Restrictions contraintes de capacité
       for(i = 1; i <= mkp->cc; i++)
-         if (mkp->a[i][j] > sol->slack[0][i])
+         if (mkp->a[i][j] > sol->slack[0][i]){
             return (0);
+         }
       return (1);
    }
 
@@ -88,8 +90,8 @@ retourne 1 si l'ajout de l'objet j dans la solution est faisable, 0 sinon
       sol->x[j] = 1;
       sol->objValue += mkp->a[0][j];
       sol->slack[0][0] = 0;
-      for(i=1; i<=mkp->cc; i++) {
-         sol->slack[0][i]-= mkp->a[i][j];
+      for(i = 1; i <= mkp->cc; i++) {
+         sol->slack[0][i] -= mkp->a[i][j];
          if(sol->slack[0][i] < 0) (sol->slack[0][0])++;
       }
       (sol->x[0])++;

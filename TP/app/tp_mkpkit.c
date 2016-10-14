@@ -32,7 +32,7 @@
       mkp = (tp_Mkp *)malloc(sizeof(tp_Mkp));		/* allocation de la "structure" Mkp */
       CHECK(mkp);
       fscanf(fp, "%d %d %d", &mkp->n, &mkp->cc, &mkp->cd);
-      printf("ERROR ?\n%d %d %d\n", mkp->n, mkp->cc, mkp->cd);
+      //printf("tp_mkpkit.c - %d %d %d\n", mkp->n, mkp->cc, mkp->cd);
       tp_alloc_mkp(mkp);						/* allocation des tableaux */
 
       for(j = 1; j <= mkp->n; j++)//getting n values
@@ -46,7 +46,7 @@
          for(j = 1; j <= mkp->n; j++)
             fscanf(fp, "%d", mkp->a[i] + j);
       for(i = mkp->cc + 1; i <= mkp->cd + mkp->cc; i++)
-         for(j=1; j <= mkp->n; j++)
+         for(j = 1; j <= mkp->n; j++)
             fscanf(fp, "%d", mkp->a[i] + j);
       fclose(fp);
       mkp->a[0][0] = 0;
