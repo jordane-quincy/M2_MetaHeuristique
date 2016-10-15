@@ -20,12 +20,6 @@
         CHECK(sol->slack[0]);
         sol->slack[1] = (int *)calloc(mkp->cd + 1, sizeof(int));
         CHECK(sol->slack[1]);
-        for(i = 0; i <= mkp->cc; i++)
-            sol->slack[0][i] = 0;
-        for(i = 0; i <= mkp->cd; i++)
-            sol->slack[1][i] = 0;
-
-        sol->objValue = 0;
         return sol;
     }
 
@@ -45,17 +39,23 @@
 /************************************************************************
                         initialisation d'une solution
 ************************************************************************/
-   void init_sol(Solution *sol, tp_Mkp *mkp)
-   {
-      int i;
+void init_sol(Solution *sol, tp_Mkp *mkp)
+{
+    int i, j;
 
-      for(i = 1; i <= mkp->cc; i++) sol->slack[0][i] = mkp->a[i][0];
-      sol->slack[0][0] = 0;
-      for(i = 1; i <= mkp->cd; i++) sol->slack[1][i] = mkp->a[mkp->cd + i][0];
-      sol->slack[1][0] = 0;
-      for(i=0; i<=mkp->n; i++) sol->x[i] = 0;
-      sol->objValue = 0;
-   }
+    sol->slack[0][0] = sol->slack[1][0] = mkp->n;
+    for(i = 1; i <= mkp->cc; i++)
+        for(j = 1; j <= mkp->n; j++)
+            sol->slack[0][i] += mkp->a[i][j];
+    for(i = 1; i <= mkp->cd; i++)
+          for(j = 1; j <= mkp->n; j++)
+            sol->slack[1][i] += mkp->a[mkp->cc + i][j];
+    for(i=0; i<=mkp->n; i++)
+        sol->x[i] = 0;
+    sol->objValue = 0;
+    for(i = 1; i <= mkp->n; i++)
+        sol->objValue += mkp->a[0][i];
+}
 
 /************************************************************************
 retourne 1 si l'ajout de l'objet j dans la solution est faisable, 0 sinon
@@ -70,7 +70,14 @@ retourne 1 si l'ajout de l'objet j dans la solution est faisable, 0 sinon
       }
       //Restrictions contraintes de capacité
       for(i = 1; i <= mkp->cc; i++)
-         if (mkp->a[i][j] > sol->slack[0][i]){
+         if (sol->slack[0][i] - mkp->a[i][j] < mkp->a[0][0]){
+            printf("Restriction contrainte de capacite\n");
+            return (0);
+         }
+      //Restrictions contraintes de demande
+      for(i = 1; i <= mkp->cd; i++)
+         if (sol->slack[1][i] - mkp->a[mkp->cc + i][j] < mkp->a[mkp->cc + i][0]){
+             printf("Restriction contrainte de demande\n");
             return (0);
          }
       return (1);
@@ -84,16 +91,21 @@ retourne 1 si l'ajout de l'objet j dans la solution est faisable, 0 sinon
       int i;
 
       if(sol->x[j] == 1) {
-         printf("Tentative d'ajout d'une variable deja a 1 !\n");
+         printf("Tentative de retrait d'une variable deja a 1 !\n");
          return;
       }
       sol->x[j] = 1;
-      sol->objValue += mkp->a[0][j];
+      sol->objValue -= mkp->a[0][j];
       sol->slack[0][0] = 0;
       for(i = 1; i <= mkp->cc; i++) {
          sol->slack[0][i] -= mkp->a[i][j];
-         if(sol->slack[0][i] < 0) (sol->slack[0][0])++;
+         if(sol->slack[0][i] > 0) (sol->slack[0][0])--;
       }
+      for(i = 1; i <= mkp->cd; i++) {
+         sol->slack[0][i] -= mkp->a[mkp->cc + i][j];
+         if(sol->slack[0][i] > 0) (sol->slack[0][0])--;
+      }
+      (sol->slack[1][0])--;
       (sol->x[0])++;
    }
 
@@ -122,7 +134,7 @@ retourne 1 si l'ajout de l'objet j dans la solution est faisable, 0 sinon
 /************************************************************************
                Copie d'une solution
 ************************************************************************/
-    Solution *copieSolution (tp_Mkp *mkp, Solution *sol) {
+    Solution *copieSolution (tp_Mkp *mkp, Solution *sol){
         int i;
         Solution *copie = alloc_sol(mkp);
         copie->objValue = sol->objValue;

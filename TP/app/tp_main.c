@@ -19,10 +19,10 @@ ObjRatio* alloc_tab(int nbrVar) {
 
 int compareRatio (const void * a, const void * b)
 {
-    if (((ObjRatio*)a)->ratio < ((ObjRatio*)b)->ratio) {
+    if (((ObjRatio*)a)->ratio > ((ObjRatio*)b)->ratio) {
         return 1;
     }
-    else if (((ObjRatio*)a)->ratio > ((ObjRatio*)b)->ratio) {
+    else if (((ObjRatio*)a)->ratio < ((ObjRatio*)b)->ratio) {
         return -1;
     }
     return 0;
@@ -39,6 +39,9 @@ int* getTableauOrdonne (tp_Mkp *mkp, int* ordre) {
         double poidsObj = 0;
         for (j = 1; j <= mkp->cc; j++) {
             poidsObj += mkp->a[j][i];
+        }
+        for (j = 1; j <= mkp->cd; j++) {
+            poidsObj += mkp->a[mkp->cc + j][i];
         }
         tabOrdonne[i].indexObj = i;
         tabOrdonne[i].ratio = coefObj/poidsObj;
@@ -109,7 +112,7 @@ int main(int argc, char *argv[]) {
         record(argv[1], "w", "Contraintes de demande impossible a resoudre !\n", argv[2]);
     }
 
-    sAmeliorante = parcoursVoisin(mkp, s);
+    //sAmeliorante = parcoursVoisin(mkp, s);
 
     printf("Ancienne value du sac : %d\n", s->objValue);
 
@@ -125,7 +128,10 @@ int main(int argc, char *argv[]) {
             if(is_add_P(mkp)) record(argv[1], "w", "Pas de solution à ce problème...\n", argv[2]);
             else record(argv[1], "a", "Pas de solution à ce problème...\n", argv[2]);
         }
-        else printf("Solution non ameliorante...\n");
+        else {
+            output_best_solution(s,argv[1],mkp->n,argv[2]);
+            printf("Solution non ameliorante...\n");
+        }
     }
 
     free_sol(s);free_sol(sAmeliorante);
