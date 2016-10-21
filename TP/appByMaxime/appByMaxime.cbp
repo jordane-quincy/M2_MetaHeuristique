@@ -31,9 +31,20 @@
 		<Compiler>
 			<Add option="-Wall" />
 		</Compiler>
-		<Unit filename="main.c">
+		<Unit filename="tp.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="tp_main.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="tp_mkpkit.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="tp_mkpkit.h" />
+		<Unit filename="tp_mkpsol.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="tp_mkpsol.h" />
 		<Extensions>
 			<code_completion />
 			<envvars />
