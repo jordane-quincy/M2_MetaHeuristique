@@ -74,6 +74,9 @@ Solution *parcoursVoisin (Mkp *mkp, Solution *s) {
                         //Si oui, on parcours les voisins de la nouvelle solution afin de retrouver une potentielle autre solution améliorante.
                         return parcoursVoisin(mkp, copieS);
                     }
+                    else {
+                        Drop(mkp, copieS, j);
+                    }
                 }
             }
         }
