@@ -70,7 +70,7 @@ Solution *parcoursVoisin (tp_Mkp *mkp, Solution *s) {
                 //Si l'objet n'est pas celui qu'on vient de retirer et si l'objet j n'est pas dans le sac,
                 //et si la valeur (dans la fonction objectif) de l'objet qu'on veut tenter d'ajouter est supérieur à celui qu'on vient de retirer
                 //et qu'on peut l'ajouter en respectant les contraintes
-                if (j != i && copieS->x[j] == 0 && mkp->a[0][j] > mkp->a[0][i] && Is_Add_F(mkp, copieS, j) == 1) {
+                if (j != i && copieS->x[j] == 0 && mkp->a[0][j] > mkp->a[0][i] && isAddPossible(mkp, copieS, j) == 1) {
                     printf("DROP/ADD\n");
                     //Alors on ajoute dans le sac
                     Add(mkp, copieS, j);
@@ -84,6 +84,8 @@ Solution *parcoursVoisin (tp_Mkp *mkp, Solution *s) {
                     }
                 }
             }
+            //Si on n'a pas trouvé de solution améliorante, on rajoute l'objet qu'on a enlevé au départ et on passe à l'objet suivant
+            Add(mkp, copieS, i);
         }
     }
     //return de la solution
@@ -101,6 +103,21 @@ int main(int argc, char *argv[]) {
     mkp = tp_load_mkp(argv[1]);
     s = alloc_sol(mkp);
 	init_sol(s, mkp);
+
+	//On a initialisé la solution comme étant un sac vide, on va ajouter tous les objets pour avoir une solution non réalisable qui possède tous les objets
+	//Puis on va retirer les objets 1 à 1 pour arriver à une solution réalisable
+	for (i = 1; i <= mkp->n; i++) {
+        Add(mkp, s, i);
+	}
+
+	printf("Object value : %d\n", s->objValue);
+	printf("slack cc : %d\n", s->slack[0][0]);
+	printf("slack cd : %d\n", s->slack[1][0]);
+
+	//Il faut maintenant retirer les objets jusqu'à ce que la solution soit réalisable
+
+	//TODO do what is in the comment juste au dessus
+
 	ordre = (int *)malloc(sizeof (int) * (mkp->n + 1));
     ordre = getTableauOrdonne(mkp, ordre);
 

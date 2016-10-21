@@ -79,6 +79,8 @@ Solution *parcoursVoisin (Mkp *mkp, Solution *s) {
                     }
                 }
             }
+            //on rajoute l'objet pour en tester un autre si on n'a pas trouvé de meilleures solutions
+            Add(mkp, copieS, i);
         }
     }
     //return de la solution
