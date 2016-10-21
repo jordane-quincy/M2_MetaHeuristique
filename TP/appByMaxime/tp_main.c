@@ -115,7 +115,7 @@ int main(int argc, char *argv[]) {
         record(argv[1], "w", "Contraintes de demande impossible a resoudre !\n", argv[2]);
     }
 
-    //sAmeliorante = parcoursVoisin(mkp, s);
+    sAmeliorante = parcoursVoisin(mkp, s);
 
     printf("Ancienne value du sac : %d\n", s->objValue);
 
@@ -137,7 +137,8 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    free_sol(s);free_sol(sAmeliorante);
+    free_sol(s);
+    free_sol(sAmeliorante);
     tp_del_mkp(mkp);
 
 	return 0;
