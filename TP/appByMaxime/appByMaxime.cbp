@@ -2,22 +2,21 @@
 <CodeBlocks_project_file>
 	<FileVersion major="1" minor="6" />
 	<Project>
-		<Option title="app" />
+		<Option title="appByMaxime" />
 		<Option pch_mode="2" />
 		<Option compiler="gcc" />
 		<Build>
 			<Target title="Debug">
-				<Option output="bin/Debug/app" prefix_auto="1" extension_auto="1" />
+				<Option output="bin/Debug/appByMaxime" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/Debug/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option parameters="100mknap1.dat output.dat" />
 				<Compiler>
 					<Add option="-g" />
 				</Compiler>
 			</Target>
 			<Target title="Release">
-				<Option output="bin/Release/app" prefix_auto="1" extension_auto="1" />
+				<Option output="bin/Release/appByMaxime" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/Release/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
@@ -35,14 +34,6 @@
 		<Unit filename="main.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="mkpkit.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="mkpkit.h" />
-		<Unit filename="mkpsol.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="mkpsol.h" />
 		<Extensions>
 			<code_completion />
 			<envvars />

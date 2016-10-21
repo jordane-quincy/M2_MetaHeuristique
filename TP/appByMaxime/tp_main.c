@@ -1,5 +1,7 @@
-#include "mkpkit.h"
-#include "mkpsol.h"
+#include "tp_mkpkit.h"
+#include "tp_mkpsol.h"
+#include "tp.h"
+
 #include "stdio.h"
 #include "stdlib.h"
 
@@ -17,16 +19,16 @@ ObjRatio* alloc_tab(int nbrVar) {
 
 int compareRatio (const void * a, const void * b)
 {
-    if (((ObjRatio*)a)->ratio < ((ObjRatio*)b)->ratio) {
+    if (((ObjRatio*)a)->ratio > ((ObjRatio*)b)->ratio) {
         return 1;
     }
-    else if (((ObjRatio*)a)->ratio > ((ObjRatio*)b)->ratio) {
+    else if (((ObjRatio*)a)->ratio < ((ObjRatio*)b)->ratio) {
         return -1;
     }
     return 0;
 }
 
-int* getTableauOrdonne (Mkp *mkp, int* ordre) {
+int* getTableauOrdonne (tp_Mkp *mkp, int* ordre) {
     ObjRatio *tabOrdonne;
     tabOrdonne = alloc_tab(mkp->n);
 
@@ -35,8 +37,11 @@ int* getTableauOrdonne (Mkp *mkp, int* ordre) {
     for (i = 1; i <= mkp->n; i++) {
         double coefObj = mkp->a[0][i];
         double poidsObj = 0;
-        for (j = 1; j <= mkp->m; j++) {
+        for (j = 1; j <= mkp->cc; j++) {
             poidsObj += mkp->a[j][i];
+        }
+        for (j = 1; j <= mkp->cd; j++) {
+            poidsObj += mkp->a[mkp->cc + j][i];
         }
         tabOrdonne[i].indexObj = i;
         tabOrdonne[i].ratio = coefObj/poidsObj;
@@ -52,7 +57,7 @@ int* getTableauOrdonne (Mkp *mkp, int* ordre) {
     return ordre;
 }
 
-Solution *parcoursVoisin (Mkp *mkp, Solution *s) {
+Solution *parcoursVoisin (tp_Mkp *mkp, Solution *s) {
     int i, j;
     Solution *copieS = copieSolution(mkp, s);
     //On parcours une première fois la solution
@@ -85,73 +90,55 @@ Solution *parcoursVoisin (Mkp *mkp, Solution *s) {
     return s;
 }
 
-/**
-output_best_solution : Génération du fichier texte de sortie.
-s : La meilleure solution trouvée.
-nomFichierEntree : Le nom du fichier en entrée ainsi que son extension.
-nbVariables : Le nombre de variables (d'objets) manipulées.
-nomFichierSortie : Le nom du fichier de sortie ainsi que son extension.
-*/
-void output_best_solution(Solution *s, char *nomFichierEntree, int nbVariables, char *nomFichierSortie){
-    int j;
-    FILE* fichier = fopen(nomFichierSortie, "w+"); // option "w+" afin de reset le fichier si présent
-
-    //si on a bien un pointeur vers le fichier
-    if(fichier != NULL){
-        // ligne 1 : nom du fichier en entrée
-        fprintf(fichier, "%s\n", nomFichierEntree);
-        // ligne 2 : nb variables
-        fprintf(fichier, "%d\n", nbVariables);
-        // ligne 3 : valeur de xj pour chaque j de N (1 si l'objet est pris, 0 sinon)
-        for (j = 1; j <= nbVariables; j++) {
-            fprintf(fichier, "%d ", s->x[j]);
-        }
-        fprintf(fichier, "\n");
-        // ligne 4 : valeur de la solution
-        fprintf(fichier, "%d", s->objValue);
-
-        // fermeture du fichier
-        fclose(fichier);
-    } else {
-        printf("Impossible d'ecrire le fichier de sortie : %s", nomFichierSortie);
-    }
-}
-
 int main(int argc, char *argv[]) {
-	Mkp *mkp;
-	Solution *s;
-	Solution *sAmeliorante;
-	int *ordre;
-	int i;
+    tp_Mkp *mkp;
+    Solution *s, *sAmeliorante = NULL;
+    int *ordre, i;
 	if(argc != 3) {
 		printf("Usage: programme nomFichierEntree nomFichierSortie\n");
 		exit(0);
-	}
-	mkp = load_mkp(argv[1]);
-	s = alloc_sol(mkp);
+    }
+    mkp = tp_load_mkp(argv[1]);
+    s = alloc_sol(mkp);
 	init_sol(s, mkp);
 	ordre = (int *)malloc(sizeof (int) * (mkp->n + 1));
     ordre = getTableauOrdonne(mkp, ordre);
+
+    if(is_add_P(mkp))
     for (i = 1; i <= mkp->n; i++) {
         if (Is_Add_F(mkp, s, ordre[i]) == 1) {
             Add(mkp, s, ordre[i]);
         }
     }
+    else {
+        printf("Contraintes de demande impossible a resoudre !\n");
+        record(argv[1], "w", "Contraintes de demande impossible a resoudre !\n", argv[2]);
+    }
 
-    sAmeliorante = parcoursVoisin(mkp, s);
+    //sAmeliorante = parcoursVoisin(mkp, s);
 
     printf("Ancienne value du sac : %d\n", s->objValue);
-    free_sol(s);
-    if (sAmeliorante != NULL) {
+
+    if (sAmeliorante != NULL && s->objValue != 0) {
         printf("Nouvelle value du sac : %d\n", sAmeliorante->objValue);
         output_best_solution(sAmeliorante,argv[1],mkp->n,argv[2]);
-        free_sol(sAmeliorante);
+        if(s->objValue == sAmeliorante->objValue)
+            printf("Solution non ameliorante...\n");
     }
     else {
-        printf("Pas de solution ameliorante");
+        if(!s->objValue) {
+            printf("Pas de solution...\n");
+            if(is_add_P(mkp)) record(argv[1], "w", "Pas de solution à ce problème...\n", argv[2]);
+            else record(argv[1], "a", "Pas de solution à ce problème...\n", argv[2]);
+        }
+        else {
+            output_best_solution(s,argv[1],mkp->n,argv[2]);
+            printf("Solution non ameliorante...\n");
+        }
     }
 
-	del_mkp(mkp);
+    free_sol(s);free_sol(sAmeliorante);
+    tp_del_mkp(mkp);
 
 	return 0;
 }
