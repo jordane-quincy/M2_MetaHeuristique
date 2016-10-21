@@ -104,7 +104,11 @@ int main(int argc, char *argv[]) {
 	ordre = (int *)malloc(sizeof (int) * (mkp->n + 1));
     ordre = getTableauOrdonne(mkp, ordre);
 
-    if(is_add_P(mkp))
+    //Check si on peut retirer l'objet, si oui on le retire
+
+    /******** HERE *********/
+    //ici on ajoutait l'objet si possible
+    /*if(is_add_P(mkp))
     for (i = 1; i <= mkp->n; i++) {
         if (Is_Add_F(mkp, s, ordre[i]) == 1) {
             Add(mkp, s, ordre[i]);
@@ -113,9 +117,9 @@ int main(int argc, char *argv[]) {
     else {
         printf("Contraintes de demande impossible a resoudre !\n");
         record(argv[1], "w", "Contraintes de demande impossible a resoudre !\n", argv[2]);
-    }
+    }*/
 
-    sAmeliorante = parcoursVoisin(mkp, s);
+    //sAmeliorante = parcoursVoisin(mkp, s);
 
     printf("Ancienne value du sac : %d\n", s->objValue);
 
@@ -138,7 +142,7 @@ int main(int argc, char *argv[]) {
     }
 
     free_sol(s);
-    free_sol(sAmeliorante);
+    //free_sol(sAmeliorante);
     tp_del_mkp(mkp);
 
 	return 0;
