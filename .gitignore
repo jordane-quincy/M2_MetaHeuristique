@@ -1,4 +1,5 @@
 *.depend
 *.layout
-*/bin/*
-*/obj/*
+**/bin/
+**/obj/
+output.dat
