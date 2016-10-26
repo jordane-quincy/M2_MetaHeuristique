@@ -82,21 +82,26 @@ int obtenirSolutionRealisable (tp_Mkp *mkp, Solution *s) {
             isNoSolution = 1;
         }
         else if (isRemovePossible(mkp, s, ordre[i])) {
-            printf("Do a drop : %d\n", ordre[i]);
             Drop(mkp, s, ordre[i]);
-            printf("solx[%d] = %d\n", ordre[i], s->x[ordre[i]]);
-
         }
     }
     return isNoSolution;
 }
 
-Solution *parcoursVoisin (tp_Mkp *mkp, Solution *s) {
+/**
+On cherche une solution améliorante
+On doit à chaque étape libérer la mémoire si cela est possible
+Il nous faut donc un compteur car on ne veut pas libérer la solution de base, par contre une fois commencé les appels récursif,
+si on trouve une solution améliorante on ne veut pas pour l'instant la conserver et donc on peut la libérer
+**/
+Solution *parcoursVoisin (tp_Mkp *mkp, Solution *s, int compteur) {
     int i, j;
+    printf("debut parcours voisin\n");
     Solution *copieS = copieSolution(mkp, s);
+    printf("apres allocation copieS\n");
     //On parcours une première fois la solution
     for (i = 1; i<= mkp->n; i++) {
-        if (copieS->x[i] == 1) {//Si on a pris l'objet i dans la solution
+        if (copieS->x[i] == 1 && isRemovePossible(mkp, copieS, i)) {//Si on a pris l'objet i dans la solution et si on peut enlever l'objet (on doit toujours respecter les cd)
             //On l'enlève
             Drop(mkp, copieS, i);
             //Puis on reparcours la liste des objets pour savoir quel objet remettre
@@ -104,14 +109,23 @@ Solution *parcoursVoisin (tp_Mkp *mkp, Solution *s) {
                 //Si l'objet n'est pas celui qu'on vient de retirer et si l'objet j n'est pas dans le sac,
                 //et si la valeur (dans la fonction objectif) de l'objet qu'on veut tenter d'ajouter est supérieur à celui qu'on vient de retirer
                 //et qu'on peut l'ajouter en respectant les contraintes
-                if (j != i && copieS->x[j] == 0 && mkp->a[0][j] > mkp->a[0][i] && isAddPossible(mkp, copieS, j) == 1) {
+                if (j != i && copieS->x[j] == 0 && mkp->a[0][j] > mkp->a[0][i] && isAddPossible(mkp, copieS, j)) {
                     printf("DROP/ADD\n");
                     //Alors on ajoute dans le sac
                     Add(mkp, copieS, j);
                     //On regarde si cette nouvelle solution est améliorante
+                    //(normalement elle est forcément améliorante puisqu'on ajoute uniquement les objets avec une valeur supérieur à l'objet qu'on a enlevé)
                     if (copieS->objValue > s->objValue) {
                         //Si oui, on parcours les voisins de la nouvelle solution afin de retrouver une potentielle autre solution améliorante.
-                        return parcoursVoisin(mkp, copieS);
+                        //Si on n'est pas sur le premier appel de la fonction, alors on peut libérer s
+                        //Sinon on ne libère rien car cela signifie que s est notre solution initiale
+                        if (compteur != 0) {
+                            printf("liberation de memoire\n");
+                            free_sol(s);
+                            s = NULL;
+                        }
+                        printf("Sol ameliorante\n");
+                        return parcoursVoisin(mkp, copieS, compteur + 1);
                     }
                     else {
                         Drop(mkp, copieS, j);
@@ -139,7 +153,6 @@ int main(int argc, char *argv[]) {
     mkp = tp_load_mkp(argv[1]);
     s = alloc_sol(mkp);
 	init_sol(s, mkp);
-    printf("%d\n", mkp->a[6][0]);
 	printf("Probleme sac a dos : nbr objets : %d, nbr cc : %d, nbr cd : %d\n", mkp->n, mkp->cc, mkp->cd);
 	//On a initialisé la solution comme étant un sac vide, on va ajouter tous les objets pour avoir une solution non réalisable qui possède tous les objets
 	//Puis on va retirer les objets 1 à 1 pour arriver à une solution réalisable
@@ -158,13 +171,13 @@ int main(int argc, char *argv[]) {
 	printf("slack cd : %d\n", s->slack[1][0]);
 
 
-    /******** HERE *********/
     /*Maintenant on recherche une solution améliorante*/
 
 
-    //sAmeliorante = parcoursVoisin(mkp, s);
+    sAmeliorante = parcoursVoisin(mkp, s, 0);
 
-    /*printf("Ancienne value du sac : %d\n", s->objValue);
+    //Affichage du résultat de la recherche de solution améliorante
+    printf("Ancienne value du sac : %d\n", s->objValue);
 
     if (sAmeliorante != NULL && s->objValue != 0) {
         printf("Nouvelle value du sac : %d\n", sAmeliorante->objValue);
@@ -184,9 +197,9 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    free_sol(s);*/
-    //free_sol(sAmeliorante);
+    //Libération de la mémoire
+    free_sol(s);
+    free_sol(sAmeliorante);
     tp_del_mkp(mkp);
-
 	return 0;
 }

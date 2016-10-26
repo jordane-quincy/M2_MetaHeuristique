@@ -116,7 +116,6 @@
    void tp_del_mkp(tp_Mkp *mkp)
    {
       int i;
-
       for(i = 0; i <= mkp->cc; i++) free(mkp->a[i]);
       for(i = mkp->cc + 1; i <= mkp->cd + mkp->cc; i++) free(mkp->a[i]);
       free(mkp->a);
