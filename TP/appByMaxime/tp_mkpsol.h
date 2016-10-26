@@ -9,7 +9,7 @@ typedef struct {
      int **slack;
 } Solution;
 
-        Solution *tp_alloc_sol(tp_Mkp *mkp);						/* allocation memoire d'une solution pour le mkp */
+        Solution *alloc_sol(tp_Mkp *mkp);
 
         void free_sol(Solution *sol);						        /* libération memoire de la solution */
 

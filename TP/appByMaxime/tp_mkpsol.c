@@ -31,7 +31,7 @@
         int i;
 
         free(sol->x);
-        for(i = 0;i < 2;i++) sol->slack[i];
+        for(i = 0;i < 2;i++) free(sol->slack[i]);
         free(sol->slack);
         free(sol);
    }
@@ -47,7 +47,9 @@ void init_sol(Solution *sol, tp_Mkp *mkp)
     //Toutes les cc sont respectées
     sol->slack[0][0] = 0;
     //Initialisation de la slack des cd
-    for (i = 1; i <= mkp->cd; i++) sol->slack[0][mkp->cc + i] = -(mkp->a[mkp->cc + i][0]);
+    for (i = 1; i <= mkp->cd; i++) {
+        sol->slack[1][i] = -(mkp->a[mkp->cc + i][i]);
+    }
     //Aucune cd n'est respectée
     sol->slack[1][0] = mkp->cd;
     //Initialisation du sac (on ne met aucun objet)
@@ -89,7 +91,7 @@ retourne 1 si le retrait de l'objet j dans la solution est faisable, 0 sinon
         }
         //Check des contraintes de demandes
         for(i = 1; i <= mkp->cd; i++)
-            if (mkp->a[i][mkp->cc + j] > sol->slack[1][i])
+            if (mkp->a[mkp->cc + i][j] > sol->slack[1][i])
             {
                 return 0;
             }
@@ -128,9 +130,9 @@ retourne 1 si le retrait de l'objet j dans la solution est faisable, 0 sinon
         //On parcours toutes les cd pour mettre à jour la slack de cd
         for (i = 1; i <= mkp->cd; i++) {
             //On ajoute le poids de cd de l'objet pour la contrainte en cours
-            sol->slack[1][i] += mkp->a[i][mkp->cc + j];
+            sol->slack[1][i] += mkp->a[mkp->cc + i][j];
             //Si la cd n'est pas respectée on ajoute 1 au nombre de cd non respectées
-            if (sol ->slack[1][i] < 0) (sol->slack[0][0])++;
+            if (sol ->slack[1][i] < 0) (sol->slack[1][0])++;
         }
         (sol->x[0])++;
     }
@@ -168,9 +170,9 @@ retourne 1 si le retrait de l'objet j dans la solution est faisable, 0 sinon
         for (i = 1; i <= mkp->cd; i++)
         {
             //On ajoute le poids de cd de l'objet pour la contrainte en cours
-            sol->slack[1][i] -= mkp->a[i][mkp->cc + j];
+            sol->slack[1][i] -= mkp->a[mkp->cc + i][j];
             //Si la cd n'est pas respectée on ajoute 1 au nombre de cd non respectées
-            if (sol ->slack[1][i] < 0) (sol->slack[0][0])++;
+            if (sol ->slack[1][i] < 0) (sol->slack[1][0])++;
         }
 
         (sol->x[0])--;
@@ -188,6 +190,7 @@ retourne 1 si le retrait de l'objet j dans la solution est faisable, 0 sinon
         }
         for (i = 0; i <= mkp->cc; i++) {
             copie->slack[0][i] = sol->slack[0][i];
+            copie->slack[1][i] = sol->slack[1][i];
         }
         return copie;
     }

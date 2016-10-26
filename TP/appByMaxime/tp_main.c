@@ -40,21 +40,55 @@ int* getTableauOrdonne (tp_Mkp *mkp, int* ordre) {
         for (j = 1; j <= mkp->cc; j++) {
             poidsObj += mkp->a[j][i];
         }
-        for (j = 1; j <= mkp->cd; j++) {
-            poidsObj += mkp->a[mkp->cc + j][i];
-        }
         tabOrdonne[i].indexObj = i;
         tabOrdonne[i].ratio = coefObj/poidsObj;
     }
     qsort((void *)(tabOrdonne + 1), (size_t) mkp->n, (size_t)sizeof(ObjRatio), compareRatio);
-
-    /*for (i = 1; i <= 8; i++) {
-        printf("Obj index : %d, obj ratio : %lf\n", tabOrdonne[i].indexObj, tabOrdonne[i].ratio);
-    }*/
     for (j = 1; j<= mkp->n; j++) {
         ordre[j] = tabOrdonne[j].indexObj;
     }
     return ordre;
+}
+
+/**
+Méthode permettant de remplir la solution avec tous les objets du sac
+**/
+void *remplirSac (tp_Mkp *mkp, Solution *s) {
+    int i;
+    for (i = 1; i <= mkp->n; i++) {
+        Add(mkp, s, i);
+	}
+	return 0;
+}
+
+/**
+Méthode permettant d'obtenir une solution réalisable à partir d'une solution non réalisable où tout les objets sont pris dans la solution
+Renvoie 1 si on n'a pas trouvé de solution réalisable, 0 sinon
+**/
+int obtenirSolutionRealisable (tp_Mkp *mkp, Solution *s) {
+    int isNoSolution = 0;
+    int i = 0;
+    //On récupère l'ordre par lequel on va retirer les objets
+    int *ordre;
+    ordre = (int *)malloc(sizeof (int) * (mkp->n + 1));
+    ordre = getTableauOrdonne(mkp, ordre);
+
+    printf("nbr d'objet : %d\n", mkp->n);
+    //Check si on peut retirer l'objet, si oui on le retire
+    printf("Nbr de cc non valid : %d\n", s->slack[0][0]);
+    while (s->slack[0][0] > 0 && isNoSolution == 0) {
+        i++;
+        if (i > mkp->n) {
+            isNoSolution = 1;
+        }
+        else if (isRemovePossible(mkp, s, ordre[i])) {
+            printf("Do a drop : %d\n", ordre[i]);
+            Drop(mkp, s, ordre[i]);
+            printf("solx[%d] = %d\n", ordre[i], s->x[ordre[i]]);
+
+        }
+    }
+    return isNoSolution;
 }
 
 Solution *parcoursVoisin (tp_Mkp *mkp, Solution *s) {
@@ -92,10 +126,12 @@ Solution *parcoursVoisin (tp_Mkp *mkp, Solution *s) {
     return s;
 }
 
+
+
 int main(int argc, char *argv[]) {
     tp_Mkp *mkp;
     Solution *s, *sAmeliorante = NULL;
-    int *ordre, i;
+    int i, j;
 	if(argc != 3) {
 		printf("Usage: programme nomFichierEntree nomFichierSortie\n");
 		exit(0);
@@ -103,42 +139,32 @@ int main(int argc, char *argv[]) {
     mkp = tp_load_mkp(argv[1]);
     s = alloc_sol(mkp);
 	init_sol(s, mkp);
-
+    printf("%d\n", mkp->a[6][0]);
+	printf("Probleme sac a dos : nbr objets : %d, nbr cc : %d, nbr cd : %d\n", mkp->n, mkp->cc, mkp->cd);
 	//On a initialisé la solution comme étant un sac vide, on va ajouter tous les objets pour avoir une solution non réalisable qui possède tous les objets
 	//Puis on va retirer les objets 1 à 1 pour arriver à une solution réalisable
-	for (i = 1; i <= mkp->n; i++) {
-        Add(mkp, s, i);
-	}
+	remplirSac(mkp, s);
 
 	printf("Object value : %d\n", s->objValue);
 	printf("slack cc : %d\n", s->slack[0][0]);
 	printf("slack cd : %d\n", s->slack[1][0]);
 
 	//Il faut maintenant retirer les objets jusqu'à ce que la solution soit réalisable
+	int isNoSolution = obtenirSolutionRealisable(mkp, s);
 
-	//TODO do what is in the comment juste au dessus
+    printf("Pas de solution ? %d\n", isNoSolution);
+    printf("Object value : %d\n", s->objValue);
+	printf("slack cc : %d\n", s->slack[0][0]);
+	printf("slack cd : %d\n", s->slack[1][0]);
 
-	ordre = (int *)malloc(sizeof (int) * (mkp->n + 1));
-    ordre = getTableauOrdonne(mkp, ordre);
-
-    //Check si on peut retirer l'objet, si oui on le retire
 
     /******** HERE *********/
-    //ici on ajoutait l'objet si possible
-    /*if(is_add_P(mkp))
-    for (i = 1; i <= mkp->n; i++) {
-        if (Is_Add_F(mkp, s, ordre[i]) == 1) {
-            Add(mkp, s, ordre[i]);
-        }
-    }
-    else {
-        printf("Contraintes de demande impossible a resoudre !\n");
-        record(argv[1], "w", "Contraintes de demande impossible a resoudre !\n", argv[2]);
-    }*/
+    /*Maintenant on recherche une solution améliorante*/
+
 
     //sAmeliorante = parcoursVoisin(mkp, s);
 
-    printf("Ancienne value du sac : %d\n", s->objValue);
+    /*printf("Ancienne value du sac : %d\n", s->objValue);
 
     if (sAmeliorante != NULL && s->objValue != 0) {
         printf("Nouvelle value du sac : %d\n", sAmeliorante->objValue);
@@ -158,7 +184,7 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    free_sol(s);
+    free_sol(s);*/
     //free_sol(sAmeliorante);
     tp_del_mkp(mkp);
 
