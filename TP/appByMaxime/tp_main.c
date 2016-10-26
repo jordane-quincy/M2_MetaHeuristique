@@ -28,7 +28,12 @@ int compareRatio (const void * a, const void * b)
     return 0;
 }
 
-int* getTableauOrdonne (tp_Mkp *mkp, int* ordre) {
+/**
+Méthode permettant de récupérer un tableau ordonnée des indices des objets du problème
+Dans ce cas le trie des objets se ferra en fonction du coeff valeur/poid
+En mettant en premier l'objet avec le plus petit ratio
+**/
+int* getTableauOrdonneByCoeff (tp_Mkp *mkp, int* ordre) {
     ObjRatio *tabOrdonne;
     tabOrdonne = alloc_tab(mkp->n);
 
@@ -47,6 +52,7 @@ int* getTableauOrdonne (tp_Mkp *mkp, int* ordre) {
     for (j = 1; j<= mkp->n; j++) {
         ordre[j] = tabOrdonne[j].indexObj;
     }
+    free(tabOrdonne);
     return ordre;
 }
 
@@ -71,7 +77,7 @@ int obtenirSolutionRealisable (tp_Mkp *mkp, Solution *s) {
     //On récupère l'ordre par lequel on va retirer les objets
     int *ordre;
     ordre = (int *)malloc(sizeof (int) * (mkp->n + 1));
-    ordre = getTableauOrdonne(mkp, ordre);
+    ordre = getTableauOrdonneByCoeff(mkp, ordre);
 
     printf("nbr d'objet : %d\n", mkp->n);
     //Check si on peut retirer l'objet, si oui on le retire
