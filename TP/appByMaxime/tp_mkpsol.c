@@ -202,6 +202,9 @@ retourne 1 si le retrait de l'objet j dans la solution est faisable, 0 sinon
         for (i = 0; i <= mkp->cc; i++) {
             //copie slack cc
             copie->slack[0][i] = sol->slack[0][i];
+
+        }
+        for (i = 0; i <= mkp->cd; i++) {
             //copie slack cd
             copie->slack[1][i] = sol->slack[1][i];
         }
