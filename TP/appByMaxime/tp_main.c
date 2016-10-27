@@ -10,19 +10,53 @@ typedef struct {
      double ratio;
 } ObjRatio;
 
+typedef struct {
+    int indexObj;
+    double demand;
+}ObjDemand;
+
 ObjRatio* alloc_tab(int nbrVar) {
     ObjRatio *tab;
     tab = (ObjRatio *)malloc(sizeof (ObjRatio) * (nbrVar + 1));
     return tab;
 }
 
+/**
+Trie du plus grand au plus petit
+**/
+int sortRatioDesc (const void * a, const void * b)
+{
+    if (((ObjRatio*)a)->ratio < ((ObjRatio*)b)->ratio) {
+        return 1;
+    }
+    else if (((ObjRatio*)a)->ratio > ((ObjRatio*)b)->ratio) {
+        return -1;
+    }
+    return 0;
+}
 
-int compareRatio (const void * a, const void * b)
+/**
+Trie du plus petit au plus grand
+**/
+int sortRatioAsc (const void * a, const void * b)
 {
     if (((ObjRatio*)a)->ratio > ((ObjRatio*)b)->ratio) {
         return 1;
     }
     else if (((ObjRatio*)a)->ratio < ((ObjRatio*)b)->ratio) {
+        return -1;
+    }
+    return 0;
+}
+
+/**
+Trie du plus petit au plus grand
+**/
+int sortDemandAsc (const void * a, const void * b) {
+    if (((ObjDemand*)a)->demand < ((ObjDemand*)b)->demand) {
+        return 1;
+    }
+    else if (((ObjDemand*)a)->demand > ((ObjDemand*)b)->demand) {
         return -1;
     }
     return 0;
@@ -48,7 +82,97 @@ int* getTableauOrdonneByCoeff (tp_Mkp *mkp, int* ordre) {
         tabOrdonne[i].indexObj = i;
         tabOrdonne[i].ratio = coefObj/poidsObj;
     }
-    qsort((void *)(tabOrdonne + 1), (size_t) mkp->n, (size_t)sizeof(ObjRatio), compareRatio);
+    qsort((void *)(tabOrdonne + 1), (size_t) mkp->n, (size_t)sizeof(ObjRatio), sortRatioAsc);
+    for (j = 1; j<= mkp->n; j++) {
+        ordre[j] = tabOrdonne[j].indexObj;
+    }
+    free(tabOrdonne);
+    return ordre;
+}
+
+/**
+Méthode permettant de récupérer un tableau ordonnée des indices des objets du problème
+Dans ce cas le trie des objets se ferra en fonction du coeff poid/(demande+valeur)
+En mettant en premier l'objet avec le grand petit ratio
+**/
+int* getTableauOrdonneByCoeffPoidSurDemandePlusValeur (tp_Mkp *mkp, int* ordre) {
+    ObjRatio *tabOrdonne;
+    tabOrdonne = alloc_tab(mkp->n);
+    int i;
+    int j;
+    for (i = 1; i <= mkp->n; i++) {
+        double coefObj = mkp->a[0][i];
+        double poidsObj = 0;
+        double demandObj = 0;
+        for (j = 1; j <= mkp->cc; j++) {
+            poidsObj += mkp->a[j][i];
+        }
+        for (j = 1; j <= mkp->cd; j++) {
+            demandObj += mkp->a[mkp->cc + j][i];
+        }
+        tabOrdonne[i].indexObj = i;
+        tabOrdonne[i].ratio = poidsObj/(coefObj + demandObj);
+    }
+    qsort((void *)(tabOrdonne + 1), (size_t) mkp->n, (size_t)sizeof(ObjRatio), sortRatioDesc);
+    for (j = 1; j<= mkp->n; j++) {
+        ordre[j] = tabOrdonne[j].indexObj;
+        printf("%lf\n",tabOrdonne[j].ratio);
+    }
+    free(tabOrdonne);
+    return ordre;
+}
+
+/**
+Méthode permettant de récupérer un tableau ordonnée des indices des objets du problème
+Dans ce cas le trie des objets se ferra en fonction de la demande de l'objet
+En mettant en premier l'objet qui rapport le moins en demande
+**/
+int* getTableauOrdonneByLessDemand (tp_Mkp *mkp, int* ordre) {
+    ObjDemand *tabOrdonne;
+    tabOrdonne = alloc_tab(mkp->n);
+
+    int i;
+    int j;
+    for (i = 1; i <= mkp->n; i++) {
+        double demandObj = 0;
+        for (j = 1; j <= mkp->cd; j++) {
+            demandObj += mkp->a[mkp->cc + j][i];
+        }
+        tabOrdonne[i].indexObj = i;
+        tabOrdonne[i].demand = demandObj;
+    }
+    qsort((void *)(tabOrdonne + 1), (size_t) mkp->n, (size_t)sizeof(ObjDemand), sortDemandAsc);
+    for (j = 1; j<= mkp->n; j++) {
+        ordre[j] = tabOrdonne[j].indexObj;
+    }
+    free(tabOrdonne);
+    return ordre;
+}
+
+/**
+Méthode permettant de récupérer un tableau ordonnée des indices des objets du problème
+Dans ce cas le trie des objets se ferra en fonction du ration demande/poids de l'objet
+En mettant en premier l'objet avec le ratio le plus petit
+**/
+int* getTableauOrdonneByCoeffDemandeSurPoids(tp_Mkp *mkp, int *ordre) {
+    ObjRatio *tabOrdonne;
+    tabOrdonne = alloc_tab(mkp->n);
+
+    int i;
+    int j;
+    for (i = 1; i <= mkp->n; i++) {
+        double poidsObj = 0;
+        double demandObj = 0;
+        for (j = 1; j <= mkp->cc; j++) {
+            poidsObj += mkp->a[j][i];
+        }
+        for (j = 1; j <= mkp->cd; j++) {
+            demandObj += mkp->a[mkp->cc + j][i];
+        }
+        tabOrdonne[i].indexObj = i;
+        tabOrdonne[i].ratio = demandObj/poidsObj;
+    }
+    qsort((void *)(tabOrdonne + 1), (size_t) mkp->n, (size_t)sizeof(ObjRatio), sortRatioAsc);
     for (j = 1; j<= mkp->n; j++) {
         ordre[j] = tabOrdonne[j].indexObj;
     }
@@ -59,8 +183,8 @@ int* getTableauOrdonneByCoeff (tp_Mkp *mkp, int* ordre) {
 /**
 Méthode permettant de remplir la solution avec tous les objets du sac
 **/
-void *remplirSac (tp_Mkp *mkp, Solution *s) {
     int i;
+void *remplirSac (tp_Mkp *mkp, Solution *s) {
     for (i = 1; i <= mkp->n; i++) {
         Add(mkp, s, i);
 	}
@@ -77,8 +201,10 @@ int obtenirSolutionRealisable (tp_Mkp *mkp, Solution *s) {
     //On récupère l'ordre par lequel on va retirer les objets
     int *ordre;
     ordre = (int *)malloc(sizeof (int) * (mkp->n + 1));
-    ordre = getTableauOrdonneByCoeff(mkp, ordre);
-
+    //ordre = getTableauOrdonneByCoeff(mkp, ordre);
+    //ordre = getTableauOrdonneByCoeffDemandeSurPoids(mkp, ordre);
+    //ordre = getTableauOrdonneByCoeffPoidSurDemandePlusValeur(mkp, ordre);
+    ordre = getTableauOrdonneByLessDemand(mkp, ordre);
     printf("nbr d'objet : %d\n", mkp->n);
     //Check si on peut retirer l'objet, si oui on le retire
     printf("Nbr de cc non valid : %d\n", s->slack[0][0]);
