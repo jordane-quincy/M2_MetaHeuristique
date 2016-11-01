@@ -48,3 +48,6 @@ Bon je vous propose une solution sahant que je n'ai pas modifier toutes les fonc
 Dites moi ce que vous en pensez, au pire on verra lundi, c'est pas comme si on été en avance :p
 
 Sur ce bon dimanche !
+
+Le projet a bien avancé, il y a la base pour avoir une solution initiale puis l'améliorer, j'ai fait quelques algos pour trouver différentes solutions initiales, on obtient des résultats différents à la fin donc c'est interessant
+On verra après en TP pour commencer l'algo de tabou ou un truc comme ça pour pouvoir chercher d'autres solutions améliorantes une fois qu'on en a trouvé une :)
