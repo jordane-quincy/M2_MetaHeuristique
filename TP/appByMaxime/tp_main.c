@@ -277,7 +277,6 @@ Solution *parcoursVoisin (tp_Mkp *mkp, Solution *s, int compteur) {
 int main(int argc, char *argv[]) {
     tp_Mkp *mkp;
     Solution *s, *sAmeliorante = NULL;
-    int i, j;
 	if(argc != 3) {
 		printf("Usage: programme nomFichierEntree nomFichierSortie\n");
 		exit(0);

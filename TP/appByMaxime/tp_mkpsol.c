@@ -6,7 +6,6 @@
     Solution *alloc_sol(tp_Mkp *mkp)
     {
         Solution *sol;
-        int i;
         printf("debut alloc sol\n");
         printf("sizeof solution : %d\n", sizeof(Solution));
         sol = (Solution *)malloc(sizeof(Solution));
