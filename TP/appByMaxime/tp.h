@@ -2,6 +2,12 @@
 #define TP_H_
 #include "tp_mkpsol.h"
 
+typedef struct {
+     int index_deleted_obj;
+     int index_added_obj;
+     int difference;
+} SolutionAll;
+
     /*
      * Ecrit dans un fichier les solutions possibles.
      */
