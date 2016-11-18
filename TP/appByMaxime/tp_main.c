@@ -284,7 +284,7 @@ Solution *parcoursVoisin (tp_Mkp *mkp, Solution *s, int compteur, int parcoursAl
         }
         Drop(mkp, copieS, solutionall.index_deleted_obj);
         Add(mkp, copieS, solutionall.index_added_obj);
-        return parcoursVoisin(mkp, copieS, compteur + 1, parcoursAllvoisin);
+        return parcoursVoisin(mkp, copieS, compteur + 1, parcoursAllvoisin, bestS);
     }
     else {
         for (i = 1; i<= mkp->n; i++) {
@@ -306,6 +306,7 @@ Solution *parcoursVoisin (tp_Mkp *mkp, Solution *s, int compteur, int parcoursAl
                             if (copieS->objValue > s->objValue) {
                                 //Si oui, on parcours les voisins de la nouvelle solution afin de retrouver une potentielle autre solution améliorante.
                                 //On libère s
+                                printf("free sol s\n");
                                 free_sol(s);
                                 s = NULL;
 
@@ -351,18 +352,19 @@ Solution *parcoursVoisin (tp_Mkp *mkp, Solution *s, int compteur, int parcoursAl
         printf("L'objet a ajouter serait l'objet %d\n", solLessDegrading.indiceObjToAdd);
         printf("On perdrait : %d\n", solLessDegrading.diffApport);
         //Si notre meilleur solution (des précédents parcours de voisin) est moins bonne que celle-ci on la conserve pour le résultat final
-        /*if (bestS->objValue < s->objValue) {
+        if (bestS->objValue < s->objValue) {
             //on libère la mémoire de la solution bestS pour mettre bestS à s (uniquement si bestS est différent de la sol initial car on veut garder notre solution initiale
             free_sol(bestS);
             bestS = s;
         }
         else {
             //on libère la mémoire de s et on fait le mouvement dégradant sur copieS pour parcourir ensuite copieS
+            printf("free sol s\n");
             free_sol(s);
             s = NULL;
             Drop(mkp, copieS, solLessDegrading.indiceObjToRemove);
             Add(mkp, copieS, solLessDegrading.indiceObjToAdd);
-        }*/
+        }
     }
     //return de la solution
     return copieS;
@@ -426,6 +428,7 @@ int main(int argc, char *argv[]) {
     }
 
     //Libévaluen de la mémoire
+    printf("test :%d", s->objValue);
     free(s);
     free_sol(sInitiale);
     free_sol(sAmeliorante);
