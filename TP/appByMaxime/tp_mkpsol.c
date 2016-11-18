@@ -27,7 +27,6 @@
     void free_sol(Solution *sol)
     {
         int i;
-
         free(sol->x);
         for(i = 0;i < 2;i++) free(sol->slack[i]);
         free(sol->slack);
