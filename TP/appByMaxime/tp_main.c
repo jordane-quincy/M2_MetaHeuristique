@@ -4,11 +4,18 @@
 
 #include "stdio.h"
 #include "stdlib.h"
+#include "limits.h"
 
 typedef struct {
      int indexObj;
      double value;
 } ObjRatio;
+
+typedef struct {
+    int indiceObjToRemove;
+    int indiceObjToAdd;
+    int diffApport;
+} SolLessDegrading;
 
 ObjRatio* alloc_tab(int nbrVar) {
     ObjRatio *tab;
@@ -223,6 +230,11 @@ si on trouve une solution améliorante on ne veut pas pour l'instant la conserver
 Solution *parcoursVoisin (tp_Mkp *mkp, Solution *s, int compteur, int parcoursAllvoisin) {
     int i, j;
     Solution *copieS = copieSolution(mkp, s);
+
+    //On initialise la solution la moins dégradante pour l'algo tabou
+    SolLessDegrading solLessDegrading;
+    //On set ce qu'on perdrait à l'infi pour que la première solution non améliorante soit prise en compte
+    solLessDegrading.diffApport = INT_MAX;
     //On parcours une première fois la solution
     if (parcoursAllvoisin) {
         //TODO parcours en passant par tous les voisins
@@ -235,26 +247,44 @@ Solution *parcoursVoisin (tp_Mkp *mkp, Solution *s, int compteur, int parcoursAl
                 //Puis on reparcours la liste des objets pour savoir quel objet remettre
                 for (j = 1; j <= mkp->n; j++) {
                     //Si l'objet n'est pas celui qu'on vient de retirer et si l'objet j n'est pas dans le sac,
-                    //et si la valeur (dans la fonction objectif) de l'objet qu'on veut tenter d'ajouter est supérieur à celui qu'on vient de retirer
                     //et qu'on peut l'ajouter en respectant les contraintes
-                    if (j != i && copieS->x[j] == 0 && mkp->a[0][j] > mkp->a[0][i] && isAddPossible(mkp, copieS, j)) {
-                        printf("DROP/ADD\n");
-                        //Alors on ajoute dans le sac
-                        Add(mkp, copieS, j);
-                        //On regarde si cette nouvelle solution est améliorante
-                        //(normalement elle est forcément améliorante puisqu'on ajoute uniquement les objets avec une valeur supérieur à l'objet qu'on a enlevé)
-                        if (copieS->objValue > s->objValue) {
-                            //Si oui, on parcours les voisins de la nouvelle solution afin de retrouver une potentielle autre solution améliorante.
-                            //Si on n'est pas sur le premier appel de la fonction, alors on peut libérer s
-                            //Sinon on ne libère rien car cela signifie que s est notre solution initiale
-                            if (compteur != 0) {
-                                free_sol(s);
-                                s = NULL;
+                    if (j != i && copieS->x[j] == 0 && isAddPossible(mkp, copieS, j)) {
+                        //si la valeur (dans la fonction objectif) de l'objet qu'on veut tenter d'ajouter est supérieur à celui qu'on vient de retirer
+                        if (mkp->a[0][j] > mkp->a[0][i]) {
+                            printf("DROP/ADD\n");
+                            //Alors on ajoute dans le sac
+                            Add(mkp, copieS, j);
+                            //On regarde si cette nouvelle solution est améliorante
+                            //(normalement elle est forcément améliorante puisqu'on ajoute uniquement les objets avec une valeur supérieur à l'objet qu'on a enlevé)
+                            if (copieS->objValue > s->objValue) {
+                                //Si oui, on parcours les voisins de la nouvelle solution afin de retrouver une potentielle autre solution améliorante.
+                                //Si on n'est pas sur le premier appel de la fonction, alors on peut libérer s
+                                //Sinon on ne libère rien car cela signifie que s est notre solution initiale
+                                if (compteur != 0) {
+                                    free_sol(s);
+                                    s = NULL;
+                                }
+                                return parcoursVoisin(mkp, copieS, compteur + 1, parcoursAllvoisin);
                             }
-                            return parcoursVoisin(mkp, copieS, compteur + 1, parcoursAllvoisin);
+                            else {
+                                Drop(mkp, copieS, j);
+                            }
                         }
                         else {
-                            Drop(mkp, copieS, j);
+                            /**Si en faisant cette échange la solution n'est pas améliorante
+                            On va stocker la moins pire des solutions non améliorantes
+                            Pour pouvoir partir de cette solution avec l'algorithme tabou
+                            (dans le cas où on ne trouve plus de solution améliorante)**/
+
+                            //On calcul ce qu'on perdrait
+                            int diffApport = mkp->a[0][i] - mkp->a[0][j];
+                            //On garde uniquement lorsque ce qu'on perdrait est plus petit que ce qu'on a sauvegardé durant les itérations précédents
+                            if (solLessDegrading.diffApport > diffApport) {
+                                //Si cette solution dégrade moins que la précédente alors on garde cette solution
+                                solLessDegrading.diffApport = diffApport;
+                                solLessDegrading.indiceObjToAdd = j;
+                                solLessDegrading.indiceObjToRemove = i;
+                            }
                         }
                     }
                 }
@@ -262,6 +292,12 @@ Solution *parcoursVoisin (tp_Mkp *mkp, Solution *s, int compteur, int parcoursAl
                 Add(mkp, copieS, i);
             }
         }
+        //A cette étape on n'a pas trouvé de solution améliorante, on va donc continuer avec la solution la moins dégradante toute en interdisant par la suite de revenir à cette solution (algo tabou)
+        printf("On devrait faire l'algorithme tabou ici\n");
+        printf("L'objet a enlever serait l'objet %d\n", solLessDegrading.indiceObjToRemove);
+        printf("L'objet a ajouter serait l'objet %d\n", solLessDegrading.indiceObjToAdd);
+        printf("On perdrait : %d\n", solLessDegrading.diffApport);
+
     }
     //return de la solution
     return s;
