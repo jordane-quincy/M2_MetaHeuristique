@@ -227,7 +227,7 @@ On doit à chaque étape libérer la mémoire si cela est possible
 Il nous faut donc un compteur car on ne veut pas libérer la solution de base, par contre une fois commencé les appels récursif,
 si on trouve une solution améliorante on ne veut pas pour l'instant la conserver et donc on peut la libérer
 **/
-Solution *parcoursVoisin (tp_Mkp *mkp, Solution *s, int compteur, int parcoursAllvoisin) {
+Solution *parcoursVoisin (tp_Mkp *mkp, Solution *s, int compteur, int parcoursAllvoisin, Solution *bestS) {
     int i, j;
     Solution *copieS = copieSolution(mkp, s);
     SolutionAll solutionall;
@@ -307,13 +307,16 @@ Solution *parcoursVoisin (tp_Mkp *mkp, Solution *s, int compteur, int parcoursAl
                             //(normalement elle est forcément améliorante puisqu'on ajoute uniquement les objets avec une valeur supérieur à l'objet qu'on a enlevé)
                             if (copieS->objValue > s->objValue) {
                                 //Si oui, on parcours les voisins de la nouvelle solution afin de retrouver une potentielle autre solution améliorante.
-                                //Si on n'est pas sur le premier appel de la fonction, alors on peut libérer s
-                                //Sinon on ne libère rien car cela signifie que s est notre solution initiale
-                                if (compteur != 0) {
-                                    free_sol(s);
-                                    s = NULL;
+                                //On libère s
+                                free_sol(s);
+                                s = NULL;
+
+                                //Si la solution améliorante qu'on vient de trouver est meilleure que la meilleure solution qu'on stoque avec l'algo tabou alors on remplace notre bestS par la solution améliorante
+                                //Qui sera alors notre nouvelle meilleure solution
+                                if (copieS->objValue > bestS->objValue) {
+                                    bestS = copieS;
                                 }
-                                return parcoursVoisin(mkp, copieS, compteur + 1, parcoursAllvoisin);
+                                return parcoursVoisin(mkp, copieS, compteur + 1, parcoursAllvoisin, copieS);
                             }
                             else {
                                 Drop(mkp, copieS, j);
@@ -341,22 +344,37 @@ Solution *parcoursVoisin (tp_Mkp *mkp, Solution *s, int compteur, int parcoursAl
                 Add(mkp, copieS, i);
             }
         }
-        //A cette étape on n'a pas trouvé de solution améliorante, on va donc continuer avec la solution la moins dégradante toute en interdisant par la suite de revenir à cette solution (algo tabou)
+        /**A cette étape on n'a pas trouvé de solution améliorante, on va donc continuer avec la solution la moins dégradante toute en interdisant par la suite de revenir à cette solution (algo tabou)
+        Il faut également stocker la solution en cours puisque c'est la meilleure solution du voisinage
+        (on la compara à la fin de l'algo avec nos autres "meilleures solutions" pour voir quelle est la meilleure des meilleures solutions)
+        **/
         printf("On devrait faire l'algorithme tabou ici\n");
         printf("L'objet a enlever serait l'objet %d\n", solLessDegrading.indiceObjToRemove);
         printf("L'objet a ajouter serait l'objet %d\n", solLessDegrading.indiceObjToAdd);
         printf("On perdrait : %d\n", solLessDegrading.diffApport);
-
+        //Si notre meilleur solution (des précédents parcours de voisin) est moins bonne que celle-ci on la conserve pour le résultat final
+        /*if (bestS->objValue < s->objValue) {
+            //on libère la mémoire de la solution bestS pour mettre bestS à s (uniquement si bestS est différent de la sol initial car on veut garder notre solution initiale
+            free_sol(bestS);
+            bestS = s;
+        }
+        else {
+            //on libère la mémoire de s et on fait le mouvement dégradant sur copieS pour parcourir ensuite copieS
+            free_sol(s);
+            s = NULL;
+            Drop(mkp, copieS, solLessDegrading.indiceObjToRemove);
+            Add(mkp, copieS, solLessDegrading.indiceObjToAdd);
+        }*/
     }
     //return de la solution
-    return s;
+    return copieS;
 }
 
 
 
 int main(int argc, char *argv[]) {
     tp_Mkp *mkp;
-    Solution *s, *sAmeliorante = NULL;
+    Solution *s = NULL, *sAmeliorante = NULL, *sInitiale = NULL;
 	if(argc != 3) {
 		printf("Usage: programme nomFichierEntree nomFichierSortie\n");
 		exit(0);
@@ -384,32 +402,34 @@ int main(int argc, char *argv[]) {
 
     /*Maintenant on recherche une solution améliorante*/
 
-
-    sAmeliorante = parcoursVoisin(mkp, s, 0, 1);
+    //copie de la sol initiale parce que s va surement être désalloué par parcoursVoisin
+    sInitiale = copieSolution(mkp, s);
+    sAmeliorante = parcoursVoisin(mkp, s, 0, 0, sInitiale);
 
     //Affichage du résultat de la recherche de solution améliorante
-    printf("Ancienne value du sac : %d\n", s->objValue);
+    printf("Ancienne value du sac : %d\n", sInitiale->objValue);
 
-    if (sAmeliorante != NULL && s->objValue != 0) {
+    if (sAmeliorante != NULL && sInitiale->objValue != 0) {
         printf("Nouvelle value du sac : %d\n", sAmeliorante->objValue);
         output_best_solution(sAmeliorante,argv[1],mkp->n,argv[2]);
-        if(s->objValue == sAmeliorante->objValue)
+        if(sInitiale->objValue == sAmeliorante->objValue)
             printf("Solution non ameliorante...\n");
     }
     else {
-        if(!s->objValue) {
+        if(!sInitiale->objValue) {
             printf("Pas de solution...\n");
             if(is_add_P(mkp)) record(argv[1], "w", "Pas de solution à ce problème...\n", argv[2]);
             else record(argv[1], "a", "Pas de solution à ce problème...\n", argv[2]);
         }
         else {
-            output_best_solution(s,argv[1],mkp->n,argv[2]);
+            output_best_solution(sInitiale,argv[1],mkp->n,argv[2]);
             printf("Solution non ameliorante...\n");
         }
     }
 
     //Libévaluen de la mémoire
-    free_sol(s);
+    free(s);
+    free_sol(sInitiale);
     free_sol(sAmeliorante);
     tp_del_mkp(mkp);
 	return 0;
