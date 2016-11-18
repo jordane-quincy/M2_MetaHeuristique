@@ -231,6 +231,7 @@ Solution *parcoursVoisin (tp_Mkp *mkp, Solution *s, int compteur, int parcoursAl
     int i, j;
     Solution *copieS = copieSolution(mkp, s);
     SolutionAll solutionall;
+    int ameliorant = 0;
     //On initialise la solution la moins dégradante pour l'algo tabou
     SolLessDegrading solLessDegrading;
     //On set ce qu'on perdrait à l'infi pour que la première solution non améliorante soit prise en compte
@@ -254,7 +255,6 @@ Solution *parcoursVoisin (tp_Mkp *mkp, Solution *s, int compteur, int parcoursAl
                         Add(mkp, copieS, j);
                         //On regarde si cette nouvelle solution est améliorante
                         //(normalement elle est forcément améliorante puisqu'on ajoute uniquement les objets avec une valeur supérieur à l'objet qu'on a enlevé)
-                        printf("OBJVALUE");
                         printf("OBJVALUE %d %d\n",copieS->objValue, s->objValue);
                         if (copieS->objValue > s->objValue) {
 
@@ -264,29 +264,32 @@ Solution *parcoursVoisin (tp_Mkp *mkp, Solution *s, int compteur, int parcoursAl
                             solutionall.difference = copieS->objValue - s->objValue;
 
                             printf("solution 1: %d %d %d\n", solutionall.index_deleted_obj, solutionall.index_added_obj, solutionall.difference);
-                            //return parcoursVoisin(mkp, copieS, compteur + 1, parcoursAllvoisin);
+
+                            ameliorant = 1;
 
                             //Si oui, on parcours les voisins de la nouvelle solution afin de retrouver une potentielle autre solution améliorante.
                             //Si on n'est pas sur le premier appel de la fonction, alors on peut libérer s
                             //Sinon on ne libère rien car cela signifie que s est notre solution initiale
-                            if (compteur != 0) {
-                                free_sol(s);
-                                s = NULL;
-                            }
+
                         }
-                        else {
+                        //else {
                             Drop(mkp, copieS, j);
-                        }
+                        //}
                     }
                 }
                 //Si on n'a pas trouvé de solution améliorante, on rajoute l'objet qu'on a enlevé au départ et on passe à l'objet suivant
                 Add(mkp, copieS, i);
             }
         }
+        free_sol(s);
+        s = NULL;
+
+        if(!ameliorant) return copieS;
+
         Drop(mkp, copieS, solutionall.index_deleted_obj);
         Add(mkp, copieS, solutionall.index_added_obj);
-        return parcoursVoisin(mkp, copieS, compteur + 1, parcoursAllvoisin, bestS);
         printf("**************\n\n");
+        return parcoursVoisin(mkp, copieS, compteur + 1, parcoursAllvoisin, bestS);
     }
     else {
         for (i = 1; i<= mkp->n; i++) {
@@ -406,7 +409,7 @@ int main(int argc, char *argv[]) {
 
     //copie de la sol initiale parce que s va surement être désalloué par parcoursVoisin
     sInitiale = copieSolution(mkp, s);
-    sAmeliorante = parcoursVoisin(mkp, s, 0, 0, sInitiale);
+    sAmeliorante = parcoursVoisin(mkp, s, 0, 1, sInitiale);
 
     //Affichage du résultat de la recherche de solution améliorante
     printf("Ancienne value du sac : %d\n", sInitiale->objValue);
