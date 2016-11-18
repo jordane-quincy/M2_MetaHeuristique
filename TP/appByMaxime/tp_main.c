@@ -254,12 +254,13 @@ Solution *parcoursVoisin (tp_Mkp *mkp, Solution *s, int compteur, int parcoursAl
                         Add(mkp, copieS, j);
                         //On regarde si cette nouvelle solution est améliorante
                         //(normalement elle est forcément améliorante puisqu'on ajoute uniquement les objets avec une valeur supérieur à l'objet qu'on a enlevé)
+                        printf("OBJVALUE");
+                        printf("OBJVALUE %d %d\n",copieS->objValue, s->objValue);
                         if (copieS->objValue > s->objValue) {
 
                             printf("solution 0: %d %d\n", i, j);
                             solutionall.index_deleted_obj = i;
                             solutionall.index_added_obj = j;
-                            printf("ERROR\n");
                             solutionall.difference = copieS->objValue - s->objValue;
 
                             printf("solution 1: %d %d %d\n", solutionall.index_deleted_obj, solutionall.index_added_obj, solutionall.difference);
@@ -285,6 +286,7 @@ Solution *parcoursVoisin (tp_Mkp *mkp, Solution *s, int compteur, int parcoursAl
         Drop(mkp, copieS, solutionall.index_deleted_obj);
         Add(mkp, copieS, solutionall.index_added_obj);
         return parcoursVoisin(mkp, copieS, compteur + 1, parcoursAllvoisin, bestS);
+        printf("**************\n\n");
     }
     else {
         for (i = 1; i<= mkp->n; i++) {
