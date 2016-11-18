@@ -6,24 +6,17 @@
     Solution *alloc_sol(tp_Mkp *mkp)
     {
         Solution *sol;
-        printf("debut alloc sol\n");
-        printf("sizeof solution : %d\n", sizeof(Solution));
         sol = (Solution *)malloc(sizeof(Solution));
-        printf("apres alloc sol sizeof solution\n");
         CHECK(sol);
         sol->x = (int *)calloc(mkp->n + 1, sizeof(int));
-        printf("apres alloc sol-x\n");
         CHECK(sol->x);
         //for(i = 0; i <= mkp->n; i++)
           //  sol->x[i] = 0;
         sol->slack = (int **)calloc(2, sizeof(int));
-        printf("apres alloc slack[]\n");
         CHECK(sol->slack);
         sol->slack[0] = (int *)calloc(mkp->cc + 1, sizeof(int));
-        printf("apres alloc slack[0][]\n");
         CHECK(sol->slack[0]);
         sol->slack[1] = (int *)calloc(mkp->cd + 1, sizeof(int));
-        printf("apres alloc slack[1][]\n");
         CHECK(sol->slack[1]);
         return sol;
     }
@@ -188,9 +181,7 @@ retourne 1 si le retrait de l'objet j dans la solution est faisable, 0 sinon
 ************************************************************************/
     Solution *copieSolution (tp_Mkp *mkp, Solution *sol){
         int i;
-        printf("debut copie sol\n");
         Solution *copie = alloc_sol(mkp);
-        printf("apres alloc sol\n");
         //On copie la valeur de la fonction objectif
         copie->objValue = sol->objValue;
         //On copie le fait qu'on prenne ou pas les objets

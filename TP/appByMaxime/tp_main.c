@@ -111,7 +111,6 @@ int* getTableauOrdonneByCoeffPoidSurDemandePlusValeur (tp_Mkp *mkp, int* ordre) 
     qsort((void *)(tabOrdonne + 1), (size_t) mkp->n, (size_t)sizeof(ObjRatio), sortRatioDesc);
     for (j = 1; j<= mkp->n; j++) {
         ordre[j] = tabOrdonne[j].indexObj;
-        printf("%lf\n",tabOrdonne[j].value);
     }
     free(tabOrdonne);
     return ordre;
@@ -223,9 +222,7 @@ si on trouve une solution améliorante on ne veut pas pour l'instant la conserver
 **/
 Solution *parcoursVoisin (tp_Mkp *mkp, Solution *s, int compteur) {
     int i, j;
-    printf("debut parcours voisin\n");
     Solution *copieS = copieSolution(mkp, s);
-    printf("apres allocation copieS\n");
     //On parcours une première fois la solution
     for (i = 1; i<= mkp->n; i++) {
         if (copieS->x[i] == 1 && isRemovePossible(mkp, copieS, i)) {//Si on a pris l'objet i dans la solution et si on peut enlever l'objet (on doit toujours respecter les cd)
@@ -247,11 +244,9 @@ Solution *parcoursVoisin (tp_Mkp *mkp, Solution *s, int compteur) {
                         //Si on n'est pas sur le premier appel de la fonction, alors on peut libérer s
                         //Sinon on ne libère rien car cela signifie que s est notre solution initiale
                         if (compteur != 0) {
-                            printf("libevaluen de memoire\n");
                             free_sol(s);
                             s = NULL;
                         }
-                        printf("Sol ameliorante\n");
                         return parcoursVoisin(mkp, copieS, compteur + 1);
                     }
                     else {
