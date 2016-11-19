@@ -51,3 +51,51 @@ Sur ce bon dimanche !
 
 Le projet a bien avancé, il y a la base pour avoir une solution initiale puis l'améliorer, j'ai fait quelques algos pour trouver différentes solutions initiales, on obtient des résultats différents à la fin donc c'est interessant
 On verra après en TP pour commencer l'algo de tabou ou un truc comme ça pour pouvoir chercher d'autres solutions améliorantes une fois qu'on en a trouvé une :)
+
+#Des début de Resultats :
+
+##1
+###a
+fichier : 500Md5_2_5_pos.txt output.dat  
+Méthode d'obtention sol initiale : getTableauOrdonneByCoeffDemandeSurPoids  
+Nbr de bouclage recherche tabou : 1000
+Taille liste tabou : 15
+
+sans tabou : 137899
+avec tabou : 142975
+
+###b
+fichier : 500Md5_2_5_pos.txt output.dat  
+Méthode d'obtention sol initiale : getTableauOrdonneByCoeffDemandeSurPoids  
+Nbr de bouclage recherche tabou : 3000
+Taille liste tabou : 15
+
+sans tabou : 137899
+avec tabou : 143278
+
+###c
+fichier : 500Md5_2_5_pos.txt output.dat  
+Méthode d'obtention sol initiale : getTableauOrdonneByLessDemand  
+Nbr de bouclage recherche tabou : 3000
+Taille liste tabou : 15
+
+sans tabou : 136076
+avec tabou : 136856
+
+###d
+fichier : 500Md5_2_5_pos.txt output.dat  
+Méthode d'obtention sol initiale : getTableauOrdonneByCoeffPoidSurDemandePlusValeur  
+Nbr de bouclage recherche tabou : 3000
+Taille liste tabou : 15
+
+sans tabou : 138827
+avec tabou : 143656
+
+###e
+fichier : 500Md5_2_5_pos.txt output.dat  
+Méthode d'obtention sol initiale : getTableauOrdonneByCoeff  
+Nbr de bouclage recherche tabou : 3000
+Taille liste tabou : 15
+
+sans tabou : 143627
+avec tabou : 145018

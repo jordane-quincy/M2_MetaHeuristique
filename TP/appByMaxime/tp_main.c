@@ -20,6 +20,7 @@ typedef struct {
 typedef struct {
     int indiceObjToRemove;
     int indiceObjToAdd;
+    int objValue;
 } TabouMouvement;
 
 typedef struct {
@@ -224,7 +225,7 @@ int obtenirSolutionRealisable (tp_Mkp *mkp, Solution *s) {
     //ordre = getTableauOrdonneByCoeff(mkp, ordre);
     //ordre = getTableauOrdonneByCoeffDemandeSurPoids(mkp, ordre);
     //ordre = getTableauOrdonneByCoeffPoidSurDemandePlusValeur(mkp, ordre);
-    ordre = getTableauOrdonneByLessDemand(mkp, ordre);
+    ordre = getTableauOrdonneByCoeff(mkp, ordre);
     printf("nbr d'objet : %d\n", mkp->n);
     //Check si on peut retirer l'objet, si oui on le retire
     printf("Nbr de cc non valid : %d\n", s->slack[0][0]);
@@ -253,14 +254,17 @@ ListTabou updateListTabou (ListTabou listTabou, TabouMouvement mouvement) {
         for (i = 1; i < listTabou.sizeMax; i++) {
             listTabou.list[i-1].indiceObjToAdd = listTabou.list[i].indiceObjToAdd;
             listTabou.list[i-1].indiceObjToRemove = listTabou.list[i].indiceObjToRemove;
+            listTabou.list[i-1].objValue = listTabou.list[i].objValue;
         }
         listTabou.list[listTabou.size - 1].indiceObjToAdd = mouvement.indiceObjToAdd;
         listTabou.list[listTabou.size - 1].indiceObjToRemove = mouvement.indiceObjToRemove;
+        listTabou.list[listTabou.size - 1].objValue = mouvement.objValue;
     }
     else {
         //Si la liste n'est pas pleine on ajoute le nouveau mouvement en fin de liste
         listTabou.list[listTabou.size].indiceObjToAdd = mouvement.indiceObjToAdd;
         listTabou.list[listTabou.size].indiceObjToRemove = mouvement.indiceObjToRemove;
+        listTabou.list[listTabou.size].objValue = mouvement.objValue;
         listTabou.size++;
     }
     return listTabou;
@@ -268,18 +272,31 @@ ListTabou updateListTabou (ListTabou listTabou, TabouMouvement mouvement) {
 
 /**
 Permet de savoir si le mouvement drop/add des indices en paramètre est présent dans la liste tabou ou non
+Ainsi que de savoir si l'objValue lié au mouvement n'a pas déjà été trouvé
 renvoie 1 si le mouvement n'est pas présent
 0 sinon
 **/
-int mouvementNotInTabouList (int indiceObjToDrop, int indiceObjToAdd, ListTabou listTabou) {
+int mouvementNotInTabouList (int indiceObjToDrop, int indiceObjToAdd, ListTabou listTabou, int objValue) {
     int i = 0;
-    int result = 1;
     for (i = 0; i < listTabou.size; i++) {
+        //On ne fait pas le mouvement car le mouvement a déjà été fait
         if (listTabou.list[i].indiceObjToAdd == indiceObjToAdd && listTabou.list[i].indiceObjToRemove == indiceObjToDrop) {
-            result = 0;
+            return 0;
+        }
+        //On ne fait pas le mouvement car il amène à un objValue égale à un mouvement tabou de la liste
+        //C'est donc potentiellement une solution déjà parcourue
+        if (objValue == listTabou.list[i].objValue) {
+            return 0;
         }
     }
-    return result;
+    return 1;
+}
+
+void affichageListTabou (ListTabou listTabou) {
+    int i;
+    for (i = 0; i < listTabou.size; i++) {
+        printf("objValueTabou : %d\n", listTabou.list[i].objValue);
+    }
 }
 
 /**
@@ -358,10 +375,10 @@ Solution *parcoursVoisin (tp_Mkp *mkp, Solution *s, int parcoursAllvoisin, Solut
                     //Si l'objet n'est pas celui qu'on vient de retirer et si l'objet j n'est pas dans le sac,
                     //et qu'on peut l'ajouter en respectant les contraintes
                     //et que le mouvement drop i / add j n'est pas dans la liste tabou
-                    if (j != i && copieS->x[j] == 0 && isAddPossible(mkp, copieS, j) && mouvementNotInTabouList(i, j, listTabou)) {
+                    if (j != i && copieS->x[j] == 0 && isAddPossible(mkp, copieS, j) && mouvementNotInTabouList(i, j, listTabou, copieS->objValue + mkp->a[0][j])) {
                         //si la valeur (dans la fonction objectif) de l'objet qu'on veut tenter d'ajouter est supérieur à celui qu'on vient de retirer
                         if (mkp->a[0][j] > mkp->a[0][i]) {
-                            printf("DROP/ADD de %d/%d\n", i, j);
+                            //printf("DROP/ADD de %d/%d\n", i, j);
                             //Alors on ajoute dans le sac
                             Add(mkp, copieS, j);
                             //On regarde si cette nouvelle solution est améliorante
@@ -372,10 +389,14 @@ Solution *parcoursVoisin (tp_Mkp *mkp, Solution *s, int parcoursAllvoisin, Solut
                                 //Si la solution améliorante qu'on vient de trouver est meilleure que la meilleure solution qu'on stoque avec l'algo tabou alors on remplace notre bestS par la solution améliorante
                                 //Qui sera alors notre nouvelle meilleure solution
                                 if (copieS->objValue > bestS->objValue) {
+                                    if (bestS->objValue =! s->objValue) {
+                                        free_sol(bestS);
+                                    }
                                     bestS = copieS;
+
                                 }
                                 //On libère s
-                                printf("free sol s\n");
+                                //printf("free sol s\n");
                                 free_sol(s);
                                 s = NULL;
                                 return parcoursVoisin(mkp, copieS, parcoursAllvoisin, bestS, listTabou, cptForTabou);
@@ -410,11 +431,10 @@ Solution *parcoursVoisin (tp_Mkp *mkp, Solution *s, int parcoursAllvoisin, Solut
         Il faut également stocker la solution en cours puisque c'est la meilleure solution du voisinage
         (on la compara à la fin de l'algo avec nos autres "meilleures solutions" pour voir quelle est la meilleure des meilleures solutions)
         **/
-        printf("On devrait faire l'algorithme tabou ici\n");
-        printf("L'objet a enlever serait l'objet %d\n", solLessDegrading.indiceObjToRemove);
-        printf("L'objet a ajouter serait l'objet %d\n", solLessDegrading.indiceObjToAdd);
-        printf("On perdrait : %d\n", solLessDegrading.diffApport);
-        printf("bestS : %d\n", bestS->objValue);
+        //printf("On devrait faire l'algorithme tabou ici\n");
+        //printf("L'objet a enlever serait l'objet %d\n", solLessDegrading.indiceObjToRemove);
+        //printf("L'objet a ajouter serait l'objet %d\n", solLessDegrading.indiceObjToAdd);
+        //printf("On perdrait : %d\n", solLessDegrading.diffApport);
         //Si notre meilleur solution (des précédents parcours de voisin) est moins bonne que celle-ci on la conserve pour le résultat final
         if (bestS->objValue <= s->objValue) {
             //on libère la mémoire de la solution bestS pour mettre bestS à s (uniquement si bestS est différent de la sol initial car on veut garder notre solution initiale
@@ -423,30 +443,32 @@ Solution *parcoursVoisin (tp_Mkp *mkp, Solution *s, int parcoursAllvoisin, Solut
                 free_sol(bestS);
             }
             bestS = s;
+            //on reset également le timer de la recherche tabou pour continuer de rechercher
+            cptForTabou = 0;
         }
         else {
             //on libère la mémoire de s
             free_sol(s);
             s = NULL;
         }
-        //on fait le mouvement dégradant sur copieS pour parcourir ensuite copieS
-        Drop(mkp, copieS, solLessDegrading.indiceObjToRemove);
-        Add(mkp, copieS, solLessDegrading.indiceObjToAdd);
+
         //On ajoute le mouvement à la lite des mouvements tabou
-        //Le mouvement tabou est l'inverse du mouvement qu'on va faire pour dégrader la solution
+        //Le mouvement tabou est l'inverse du mouvement qu'on va faire pour dégrader la solution ainsi que l'obj value de la solution en cours (du minimum local)
         //Si pour dégradé la solution en fait drop i / add j alors le mouvement tabou est add i / drop j
         TabouMouvement tabouMouvement;
         tabouMouvement.indiceObjToAdd = solLessDegrading.indiceObjToRemove;
         tabouMouvement.indiceObjToRemove = solLessDegrading.indiceObjToAdd;
+        tabouMouvement.objValue = copieS->objValue;
         listTabou = updateListTabou(listTabou, tabouMouvement);
-        tabouMouvement.indiceObjToAdd = solLessDegrading.indiceObjToAdd;
-        tabouMouvement.indiceObjToRemove = solLessDegrading.indiceObjToRemove;
-        listTabou = updateListTabou(listTabou, tabouMouvement);
+        //on fait le mouvement dégradant sur copieS pour parcourir ensuite copieS
+        Drop(mkp, copieS, solLessDegrading.indiceObjToRemove);
+        Add(mkp, copieS, solLessDegrading.indiceObjToAdd);
         //Puis on parcours les voisins de la solution la moins dégradante
-        printf("copieS : %d\n", copieS->objValue);
-        if (cptForTabou < 10) {
-            printf("On applique l'algo tabou en parcourant les voisins d'une solution degradante\n");
-            printf("bestS : %d\n", bestS->objValue);
+
+        if (cptForTabou < 3000) {
+            //printf("On applique l'algo tabou en parcourant les voisins d'une solution degradante\n");
+            //printf("copieS : %d\n", copieS->objValue);
+            //printf("bestS : %d\n", bestS->objValue);
             return parcoursVoisin(mkp, copieS, parcoursAllvoisin, bestS, listTabou, cptForTabou + 1);
         }
         return bestS;
@@ -493,6 +515,7 @@ int main(int argc, char *argv[]) {
 
     //copie de la sol initiale parce que s va surement être désalloué par parcoursVoisin
     sInitiale = copieSolution(mkp, s);
+    printf("Calcul en cours, patientez...");
     sAmeliorante = parcoursVoisin(mkp, s, 0, s, listTabou, 0);
 
     //Affichage du résultat de la recherche de solution améliorante
