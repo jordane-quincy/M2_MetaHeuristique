@@ -278,6 +278,7 @@ Solution *parcoursVoisin (tp_Mkp *mkp, Solution *s, int parcoursAllvoisin, Solut
     int i, j;
     Solution *copieS = copieSolution(mkp, s);
     SolutionAll solutionall;
+    int ameliorant = 0;
     //On initialise la solution la moins dégradante pour l'algo tabou
     SolLessDegrading solLessDegrading;
     //On set ce qu'on perdrait à l'infi pour que la première solution non améliorante soit prise en compte
@@ -301,7 +302,6 @@ Solution *parcoursVoisin (tp_Mkp *mkp, Solution *s, int parcoursAllvoisin, Solut
                         Add(mkp, copieS, j);
                         //On regarde si cette nouvelle solution est améliorante
                         //(normalement elle est forcément améliorante puisqu'on ajoute uniquement les objets avec une valeur supérieur à l'objet qu'on a enlevé)
-                        printf("OBJVALUE");
                         printf("OBJVALUE %d %d\n",copieS->objValue, s->objValue);
                         if (copieS->objValue > s->objValue) {
 
@@ -311,24 +311,26 @@ Solution *parcoursVoisin (tp_Mkp *mkp, Solution *s, int parcoursAllvoisin, Solut
                             solutionall.difference = copieS->objValue - s->objValue;
 
                             printf("solution 1: %d %d %d\n", solutionall.index_deleted_obj, solutionall.index_added_obj, solutionall.difference);
-                            //return parcoursVoisin(mkp, copieS, compteur + 1, parcoursAllvoisin);
-
-                            //Si oui, on parcours les voisins de la nouvelle solution afin de retrouver une potentielle autre solution améliorante.
-
+                            ameliorant = 1;
                         }
-                        else {
+                        //else {
                             Drop(mkp, copieS, j);
-                        }
+                        //}
                     }
                 }
                 //Si on n'a pas trouvé de solution améliorante, on rajoute l'objet qu'on a enlevé au départ et on passe à l'objet suivant
                 Add(mkp, copieS, i);
             }
         }
+        free_sol(s);
+        s = NULL;
+
+        if(!ameliorant) return copieS;
+
         Drop(mkp, copieS, solutionall.index_deleted_obj);
         Add(mkp, copieS, solutionall.index_added_obj);
-        return parcoursVoisin(mkp, copieS, parcoursAllvoisin, bestS, listTabou);
         printf("**************\n\n");
+        return parcoursVoisin(mkp, copieS, parcoursAllvoisin, bestS, listTabou);
     }
     else {
         for (i = 1; i<= mkp->n; i++) {
