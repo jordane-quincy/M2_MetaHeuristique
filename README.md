@@ -61,7 +61,7 @@ Méthode d'obtention sol initiale : getTableauOrdonneByCoeffDemandeSurPoids
 Nbr de bouclage recherche tabou : 1000
 Taille liste tabou : 15
 
-sans tabou : 137899
+sans tabou : 137899  
 avec tabou : 142975
 
 ###b
@@ -70,7 +70,7 @@ Méthode d'obtention sol initiale : getTableauOrdonneByCoeffDemandeSurPoids
 Nbr de bouclage recherche tabou : 3000
 Taille liste tabou : 15
 
-sans tabou : 137899
+sans tabou : 137899  
 avec tabou : 143278
 
 ###c
@@ -79,7 +79,7 @@ Méthode d'obtention sol initiale : getTableauOrdonneByLessDemand
 Nbr de bouclage recherche tabou : 3000
 Taille liste tabou : 15
 
-sans tabou : 136076
+sans tabou : 136076  
 avec tabou : 136856
 
 ###d
@@ -88,7 +88,7 @@ Méthode d'obtention sol initiale : getTableauOrdonneByCoeffPoidSurDemandePlusVa
 Nbr de bouclage recherche tabou : 3000
 Taille liste tabou : 15
 
-sans tabou : 138827
+sans tabou : 138827  
 avec tabou : 143656
 
 ###e
@@ -97,5 +97,5 @@ Méthode d'obtention sol initiale : getTableauOrdonneByCoeff
 Nbr de bouclage recherche tabou : 3000
 Taille liste tabou : 15
 
-sans tabou : 143627
+sans tabou : 143627  
 avec tabou : 145018
