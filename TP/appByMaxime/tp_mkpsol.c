@@ -6,17 +6,17 @@
     Solution *alloc_sol(tp_Mkp *mkp)
     {
         Solution *sol;
-        sol = (Solution *)malloc(sizeof(Solution));
+        sol = malloc(sizeof(Solution));
         CHECK(sol);
-        sol->x = (int *)calloc(mkp->n + 1, sizeof(int));
+        sol->x = calloc(mkp->n + 1, sizeof(int));
         CHECK(sol->x);
         //for(i = 0; i <= mkp->n; i++)
           //  sol->x[i] = 0;
-        sol->slack = (int **)calloc(2, sizeof(int));
+        sol->slack = calloc(2, sizeof(int));
         CHECK(sol->slack);
-        sol->slack[0] = (int *)calloc(mkp->cc + 1, sizeof(int));
+        sol->slack[0] = calloc(mkp->cc + 1, sizeof(int));
         CHECK(sol->slack[0]);
-        sol->slack[1] = (int *)calloc(mkp->cd + 1, sizeof(int));
+        sol->slack[1] = calloc(mkp->cd + 1, sizeof(int));
         CHECK(sol->slack[1]);
         return sol;
     }
