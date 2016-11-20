@@ -305,7 +305,7 @@ On doit à chaque étape libérer la mémoire si cela est possible
 Il nous faut donc un compteur car on ne veut pas libérer la solution de base, par contre une fois commencé les appels récursif,
 si on trouve une solution améliorante on ne veut pas pour l'instant la conserver et donc on peut la libérer
 **/
-Solution *parcoursVoisin (tp_Mkp *mkp, Solution *s, int parcoursAllvoisin, Solution *bestS, ListTabou listTabou, int cptForTabou) {
+Solution *parcoursVoisin (tp_Mkp *mkp, Solution *s, int parcoursAllvoisin, Solution *bestS, ListTabou listTabou, int cptForTabou, int cptTotal) {
     int i, j;
     Solution *copieS = copieSolution(mkp, s);
     SolutionAll solutionall;
@@ -316,7 +316,6 @@ Solution *parcoursVoisin (tp_Mkp *mkp, Solution *s, int parcoursAllvoisin, Solut
     solLessDegrading.diffApport = INT_MAX;
     solLessDegrading.indiceObjToAdd = -1;
     solLessDegrading.indiceObjToRemove = -1;
-
     //On parcours une première fois la solution
     if (parcoursAllvoisin) {
         //TODO parcours en passant par tous les voisins
@@ -363,13 +362,14 @@ Solution *parcoursVoisin (tp_Mkp *mkp, Solution *s, int parcoursAllvoisin, Solut
         Drop(mkp, copieS, solutionall.index_deleted_obj);
         Add(mkp, copieS, solutionall.index_added_obj);
         printf("**************\n\n");
-        return parcoursVoisin(mkp, copieS, parcoursAllvoisin, bestS, listTabou, cptForTabou);
+        return parcoursVoisin(mkp, copieS, parcoursAllvoisin, bestS, listTabou, cptForTabou, cptTotal);
     }
     else {
         for (i = 1; i<= mkp->n; i++) {
             if (copieS->x[i] == 1 && isRemovePossible(mkp, copieS, i)) {//Si on a pris l'objet i dans la solution et si on peut enlever l'objet (on doit toujours respecter les cd)
                 //On l'enlève
                 Drop(mkp, copieS, i);
+                //printf("juste après drop\n");
                 //Puis on reparcours la liste des objets pour savoir quel objet remettre
                 for (j = 1; j <= mkp->n; j++) {
                     //Si l'objet n'est pas celui qu'on vient de retirer et si l'objet j n'est pas dans le sac,
@@ -385,21 +385,19 @@ Solution *parcoursVoisin (tp_Mkp *mkp, Solution *s, int parcoursAllvoisin, Solut
                             //(normalement elle est forcément améliorante puisqu'on ajoute uniquement les objets avec une valeur supérieur à l'objet qu'on a enlevé)
                             if (copieS->objValue > s->objValue) {
                                 //Si oui, on parcours les voisins de la nouvelle solution afin de retrouver une potentielle autre solution améliorante.
-
                                 //Si la solution améliorante qu'on vient de trouver est meilleure que la meilleure solution qu'on stoque avec l'algo tabou alors on remplace notre bestS par la solution améliorante
                                 //Qui sera alors notre nouvelle meilleure solution
                                 if (copieS->objValue > bestS->objValue) {
-                                    if (bestS->objValue =! s->objValue) {
+                                    if (bestS->objValue != s->objValue) {
                                         free_sol(bestS);
                                     }
                                     bestS = copieS;
-
                                 }
                                 //On libère s
                                 //printf("free sol s\n");
                                 free_sol(s);
                                 s = NULL;
-                                return parcoursVoisin(mkp, copieS, parcoursAllvoisin, bestS, listTabou, cptForTabou);
+                                return parcoursVoisin(mkp, copieS, parcoursAllvoisin, bestS, listTabou, cptForTabou, cptTotal);
                             }
                             else {
                                 Drop(mkp, copieS, j);
@@ -450,6 +448,7 @@ Solution *parcoursVoisin (tp_Mkp *mkp, Solution *s, int parcoursAllvoisin, Solut
             //on libère la mémoire de s
             free_sol(s);
             s = NULL;
+
         }
 
         //On ajoute le mouvement à la lite des mouvements tabou
@@ -469,7 +468,8 @@ Solution *parcoursVoisin (tp_Mkp *mkp, Solution *s, int parcoursAllvoisin, Solut
             //printf("On applique l'algo tabou en parcourant les voisins d'une solution degradante\n");
             //printf("copieS : %d\n", copieS->objValue);
             //printf("bestS : %d\n", bestS->objValue);
-            return parcoursVoisin(mkp, copieS, parcoursAllvoisin, bestS, listTabou, cptForTabou + 1);
+            printf("cpt total : %d, list tabou size : %d\n", cptTotal, listTabou.size);
+            return parcoursVoisin(mkp, copieS, parcoursAllvoisin, bestS, listTabou, cptForTabou + 1, cptTotal + 1);
         }
         return bestS;
     }
@@ -516,7 +516,7 @@ int main(int argc, char *argv[]) {
     //copie de la sol initiale parce que s va surement être désalloué par parcoursVoisin
     sInitiale = copieSolution(mkp, s);
     printf("Calcul en cours, patientez...");
-    sAmeliorante = parcoursVoisin(mkp, s, 0, s, listTabou, 0);
+    sAmeliorante = parcoursVoisin(mkp, s, 0, s, listTabou, 0, 0);
 
     //Affichage du résultat de la recherche de solution améliorante
     printf("Ancienne value du sac : %d\n", sInitiale->objValue);
@@ -540,7 +540,7 @@ int main(int argc, char *argv[]) {
     }
 
     //Libévaluen de la mémoire
-    printf("test :%d", s->objValue);
+    //printf("test :%d", s->objValue);
     free(s);
     free_sol(sInitiale);
     free_sol(sAmeliorante);
