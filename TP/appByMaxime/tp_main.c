@@ -35,11 +35,12 @@ ObjRatio* alloc_tab(int nbrVar) {
     return tab;
 }
 
-ListTabou init_tabou_list (int sizeTabouList) {
-    ListTabou listTabou;
-    listTabou.list = malloc(sizeof (TabouMouvement) * sizeTabouList);
-    listTabou.size = 0;
-    listTabou.sizeMax = sizeTabouList;
+ListTabou* init_tabou_list (int sizeTabouList) {
+    ListTabou *listTabou;
+    listTabou = malloc(sizeof (ListTabou));
+    listTabou->list = malloc(sizeof (TabouMouvement) * sizeTabouList);
+    listTabou->size = 0;
+    listTabou->sizeMax = sizeTabouList;
     return listTabou;
 }
 
@@ -248,25 +249,25 @@ Si la liste tabou est pleine, on supprime le premier mouvement de la liste, on d
 Et on ajoute enfin le nouveau mouvement en fin de liste
 (comportement d'une FIFO
 **/
-ListTabou updateListTabou (ListTabou listTabou, TabouMouvement mouvement) {
-    if (listTabou.size == listTabou.sizeMax) {
+ListTabou *updateListTabou (ListTabou *listTabou, TabouMouvement mouvement) {
+    if (listTabou->size == listTabou->sizeMax) {
         //Si on est à la taille max, on décalle la liste tabou et on ajoute le nouveau mouvement à la fin
         int i;
-        for (i = 1; i < listTabou.sizeMax; i++) {
-            listTabou.list[i-1].indiceObjToAdd = listTabou.list[i].indiceObjToAdd;
-            listTabou.list[i-1].indiceObjToRemove = listTabou.list[i].indiceObjToRemove;
-            listTabou.list[i-1].objValue = listTabou.list[i].objValue;
+        for (i = 1; i < listTabou->sizeMax; i++) {
+            listTabou->list[i-1].indiceObjToAdd = listTabou->list[i].indiceObjToAdd;
+            listTabou->list[i-1].indiceObjToRemove = listTabou->list[i].indiceObjToRemove;
+            listTabou->list[i-1].objValue = listTabou->list[i].objValue;
         }
-        listTabou.list[listTabou.size - 1].indiceObjToAdd = mouvement.indiceObjToAdd;
-        listTabou.list[listTabou.size - 1].indiceObjToRemove = mouvement.indiceObjToRemove;
-        listTabou.list[listTabou.size - 1].objValue = mouvement.objValue;
+        listTabou->list[listTabou->size - 1].indiceObjToAdd = mouvement.indiceObjToAdd;
+        listTabou->list[listTabou->size - 1].indiceObjToRemove = mouvement.indiceObjToRemove;
+        listTabou->list[listTabou->size - 1].objValue = mouvement.objValue;
     }
     else {
         //Si la liste n'est pas pleine on ajoute le nouveau mouvement en fin de liste
-        listTabou.list[listTabou.size].indiceObjToAdd = mouvement.indiceObjToAdd;
-        listTabou.list[listTabou.size].indiceObjToRemove = mouvement.indiceObjToRemove;
-        listTabou.list[listTabou.size].objValue = mouvement.objValue;
-        listTabou.size++;
+        listTabou->list[listTabou->size].indiceObjToAdd = mouvement.indiceObjToAdd;
+        listTabou->list[listTabou->size].indiceObjToRemove = mouvement.indiceObjToRemove;
+        listTabou->list[listTabou->size].objValue = mouvement.objValue;
+        listTabou->size++;
     }
     return listTabou;
 }
@@ -277,16 +278,16 @@ Ainsi que de savoir si l'objValue lié au mouvement n'a pas déjà été trouvé
 renvoie 1 si le mouvement n'est pas présent
 0 sinon
 **/
-int mouvementNotInTabouList (int indiceObjToDrop, int indiceObjToAdd, ListTabou listTabou, int objValue) {
+int mouvementNotInTabouList (int indiceObjToDrop, int indiceObjToAdd, ListTabou *listTabou, int objValue) {
     int i = 0;
-    for (i = 0; i < listTabou.size; i++) {
+    for (i = 0; i < listTabou->size; i++) {
         //On ne fait pas le mouvement car le mouvement a déjà été fait
-        if (listTabou.list[i].indiceObjToAdd == indiceObjToAdd && listTabou.list[i].indiceObjToRemove == indiceObjToDrop) {
+        if (listTabou->list[i].indiceObjToAdd == indiceObjToAdd && listTabou->list[i].indiceObjToRemove == indiceObjToDrop) {
             return 0;
         }
         //On ne fait pas le mouvement car il amène à un objValue égale à un mouvement tabou de la liste
         //C'est donc potentiellement une solution déjà parcourue
-        if (objValue == listTabou.list[i].objValue) {
+        if (objValue == listTabou->list[i].objValue) {
             return 0;
         }
     }
@@ -306,9 +307,9 @@ On doit à chaque étape libérer la mémoire si cela est possible
 Il nous faut donc un compteur car on ne veut pas libérer la solution de base, par contre une fois commencé les appels récursif,
 si on trouve une solution améliorante on ne veut pas pour l'instant la conserver et donc on peut la libérer
 **/
-Solution *parcoursVoisin (tp_Mkp *mkp, Solution *s, int parcoursAllvoisin, Solution *bestS, ListTabou listTabou, int cptForTabou, int cptTotal) {
+Solution *parcoursVoisin (tp_Mkp *mkp, Solution *sInitiale, int parcoursAllvoisin, Solution *bestS, ListTabou *listTabou, int cptForTabou, int cptTotal) {
     int i, j;
-    Solution *copieS = copieSolution(mkp, s);
+    Solution *copieS = copieSolution(mkp, sInitiale);
     SolutionAll solutionall;
     int ameliorant = 0;
     //On initialise la solution la moins dégradante pour l'algo tabou
@@ -335,13 +336,13 @@ Solution *parcoursVoisin (tp_Mkp *mkp, Solution *s, int parcoursAllvoisin, Solut
                         Add(mkp, copieS, j);
                         //On regarde si cette nouvelle solution est améliorante
                         //(normalement elle est forcément améliorante puisqu'on ajoute uniquement les objets avec une valeur supérieur à l'objet qu'on a enlevé)
-                        printf("OBJVALUE %d %d\n",copieS->objValue, s->objValue);
-                        if (copieS->objValue > s->objValue) {
+                        printf("OBJVALUE %d %d\n",copieS->objValue, sInitiale->objValue);
+                        if (copieS->objValue > sInitiale->objValue) {
 
                             printf("solution 0: %d %d\n", i, j);
                             solutionall.index_deleted_obj = i;
                             solutionall.index_added_obj = j;
-                            solutionall.difference = copieS->objValue - s->objValue;
+                            solutionall.difference = copieS->objValue - sInitiale->objValue;
 
                             printf("solution 1: %d %d %d\n", solutionall.index_deleted_obj, solutionall.index_added_obj, solutionall.difference);
                             ameliorant = 1;
@@ -355,8 +356,8 @@ Solution *parcoursVoisin (tp_Mkp *mkp, Solution *s, int parcoursAllvoisin, Solut
                 Add(mkp, copieS, i);
             }
         }
-        free_sol(s);
-        s = NULL;
+        free_sol(sInitiale);
+        sInitiale = NULL;
 
         if(!ameliorant) return copieS;
 
@@ -384,12 +385,12 @@ Solution *parcoursVoisin (tp_Mkp *mkp, Solution *s, int parcoursAllvoisin, Solut
                             Add(mkp, copieS, j);
                             //On regarde si cette nouvelle solution est améliorante
                             //(normalement elle est forcément améliorante puisqu'on ajoute uniquement les objets avec une valeur supérieur à l'objet qu'on a enlevé)
-                            if (copieS->objValue > s->objValue) {
+                            if (copieS->objValue > sInitiale->objValue) {
                                 //Si oui, on parcours les voisins de la nouvelle solution afin de retrouver une potentielle autre solution améliorante.
                                 //Si la solution améliorante qu'on vient de trouver est meilleure que la meilleure solution qu'on stoque avec l'algo tabou alors on remplace notre bestS par la solution améliorante
                                 //Qui sera alors notre nouvelle meilleure solution
                                 if (copieS->objValue > bestS->objValue) {
-                                    if (bestS->objValue != s->objValue) {
+                                    if (bestS->objValue != sInitiale->objValue) {
                                         free_sol(bestS);
                                     }
 
@@ -397,10 +398,10 @@ Solution *parcoursVoisin (tp_Mkp *mkp, Solution *s, int parcoursAllvoisin, Solut
                                     //reset du compteur pour la recherche tabou pour indiquer qu'il faut continuer de chercher
                                     cptForTabou = 0;
                                 }
-                                //On libère s
+                                //On libère sInitiale
                                 //printf("free sol s\n");
-                                free_sol(s);
-                                s = NULL;
+                                free_sol(sInitiale);
+                                sInitiale = NULL;
                                 return parcoursVoisin(mkp, copieS, parcoursAllvoisin, bestS, listTabou, cptForTabou, cptTotal);
                             }
                             else {
@@ -438,20 +439,20 @@ Solution *parcoursVoisin (tp_Mkp *mkp, Solution *s, int parcoursAllvoisin, Solut
         //printf("L'objet a ajouter serait l'objet %d\n", solLessDegrading.indiceObjToAdd);
         //printf("On perdrait : %d\n", solLessDegrading.diffApport);
         //Si notre meilleur solution (des précédents parcours de voisin) est moins bonne que celle-ci on la conserve pour le résultat final
-        if (bestS->objValue < s->objValue) {
+        if (bestS->objValue < sInitiale->objValue) {
             //on libère la mémoire de la solution bestS pour mettre bestS à s (uniquement si bestS est différent de la sol initial car on veut garder notre solution initiale
             //free_sol(bestS);
                 free_sol(bestS);
-            bestS = s;
+            bestS = sInitiale;
             //on reset également le timer de la recherche tabou pour continuer de rechercher
             cptForTabou = 0;
 
         }
         else {
             //on libère la mémoire de s uniquement si s et bestS sont différent (en se basant sur l'objValue
-            if (bestS->objValue != s->objValue) {
-                free_sol(s);
-                s = NULL;
+            if (bestS->objValue != sInitiale->objValue) {
+                free_sol(sInitiale);
+                sInitiale = NULL;
             }
 
         }
@@ -469,7 +470,7 @@ Solution *parcoursVoisin (tp_Mkp *mkp, Solution *s, int parcoursAllvoisin, Solut
         Add(mkp, copieS, solLessDegrading.indiceObjToAdd);
         //Puis on parcours les voisins de la solution la moins dégradante
 
-        if (cptForTabou < 3000) {
+        if (cptForTabou < 10000) {
             //printf("On applique l'algo tabou en parcourant les voisins d'une solution degradante\n");
             //printf("copieS : %d\n", copieS->objValue);
             //printf("bestS : %d\n", bestS->objValue);
@@ -479,7 +480,7 @@ Solution *parcoursVoisin (tp_Mkp *mkp, Solution *s, int parcoursAllvoisin, Solut
         return bestS;
     }
     //return de la solution
-    return s;
+    return sInitiale;
 }
 
 
@@ -494,7 +495,7 @@ int main(int argc, char *argv[]) {
     mkp = tp_load_mkp(argv[1]);
     int sizeListTabou = atoi(argv[3]);
     //Init liste tabou
-    ListTabou listTabou = init_tabou_list(sizeListTabou);
+    ListTabou *listTabou = init_tabou_list(sizeListTabou);
 
     s = alloc_sol(mkp);
 	init_sol(s, mkp);
@@ -545,8 +546,8 @@ int main(int argc, char *argv[]) {
 
     //Libévaluen de la mémoire
     //printf("test :%d", s->objValue);
-    free(listTabou.list);
-    listTabou.list = NULL;
+    free(listTabou->list);
+    listTabou->list = NULL;
     free(s);
     free_sol(sInitiale);
     free_sol(sAmeliorante);
