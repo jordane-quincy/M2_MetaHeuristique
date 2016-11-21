@@ -31,13 +31,14 @@ typedef struct {
 
 ObjRatio* alloc_tab(int nbrVar) {
     ObjRatio *tab;
+    tab = malloc(sizeof(ObjRatio));
     tab = malloc(sizeof (ObjRatio) * (nbrVar + 1));
     return tab;
 }
 
 ListTabou* init_tabou_list (int sizeTabouList) {
     ListTabou *listTabou;
-    listTabou = malloc(sizeof (ListTabou));
+    listTabou = malloc(sizeof(ListTabou));
     listTabou->list = calloc(sizeTabouList, sizeof(TabouMouvement));
     listTabou->size = 0;
     listTabou->sizeMax = sizeTabouList;
@@ -92,6 +93,7 @@ En mettant en premier l'objet avec le plus petit value
 **/
 int* getTableauOrdonneByCoeff (tp_Mkp *mkp, int* ordre) {
     ObjRatio *tabOrdonne;
+    tabOrdonne = malloc(sizeof(ObjRatio));
     tabOrdonne = alloc_tab(mkp->n);
 
     int i;
@@ -110,6 +112,7 @@ int* getTableauOrdonneByCoeff (tp_Mkp *mkp, int* ordre) {
         ordre[j] = tabOrdonne[j].indexObj;
     }
     free(tabOrdonne);
+    tabOrdonne = NULL;
     return ordre;
 }
 
@@ -222,7 +225,7 @@ int obtenirSolutionRealisable (tp_Mkp *mkp, Solution *s) {
     int i = 0;
     //On récupère l'ordre par lequel on va retirer les objets
     int *ordre;
-    ordre = malloc(sizeof (int) * (mkp->n + 1));
+    ordre = malloc(sizeof(int) * (mkp->n + 1));
     //ordre = getTableauOrdonneByCoeff(mkp, ordre);
     //ordre = getTableauOrdonneByCoeffDemandeSurPoids(mkp, ordre);
     //ordre = getTableauOrdonneByCoeffPoidSurDemandePlusValeur(mkp, ordre);
@@ -240,6 +243,7 @@ int obtenirSolutionRealisable (tp_Mkp *mkp, Solution *s) {
         }
     }
     free(ordre);
+    //ordre = NULL;
     return isNoSolution;
 }
 
@@ -294,10 +298,10 @@ int mouvementNotInTabouList (int indiceObjToDrop, int indiceObjToAdd, ListTabou 
     return 1;
 }
 
-void affichageListTabou (ListTabou listTabou) {
+void affichageListTabou (ListTabou *listTabou) {
     int i;
-    for (i = 0; i < listTabou.size; i++) {
-        printf("objValueTabou : %d\n", listTabou.list[i].objValue);
+    for (i = 0; i < listTabou->size; i++) {
+        printf("objValueTabou : %d\n", listTabou->list[i].objValue);
     }
 }
 
@@ -313,9 +317,9 @@ Solution *parcoursVoisin (tp_Mkp *mkp, Solution *sInitiale, int parcoursAllvoisi
     SolutionAll *solutionall;
     int ameliorant = 0;
     //On initialise la solution la moins dégradante pour l'algo tabou
-    SolLessDegrading * solLessDegrading;
+    SolLessDegrading *solLessDegrading;
     //On set ce qu'on perdrait à l'infi pour que la première solution non améliorante soit prise en compte
-    solLessDegrading = malloc(sizeof (SolLessDegrading));
+    solLessDegrading = malloc(sizeof(SolLessDegrading));
     solLessDegrading->diffApport = INT_MAX;
     solLessDegrading->indiceObjToAdd = -1;
     solLessDegrading->indiceObjToRemove = -1;
@@ -341,7 +345,7 @@ Solution *parcoursVoisin (tp_Mkp *mkp, Solution *sInitiale, int parcoursAllvoisi
                         if (copieS->objValue > sInitiale->objValue) {
 
                             printf("solution 0: %d %d\n", i, j);
-                            solutionall = malloc(sizeof (SolutionAll));
+                            solutionall = malloc(sizeof(SolutionAll));
                             solutionall->index_deleted_obj = i;
                             solutionall->index_added_obj = j;
                             solutionall->difference = copieS->objValue - sInitiale->objValue;
@@ -366,6 +370,8 @@ Solution *parcoursVoisin (tp_Mkp *mkp, Solution *sInitiale, int parcoursAllvoisi
         Drop(mkp, copieS, solutionall->index_deleted_obj);
         Add(mkp, copieS, solutionall->index_added_obj);
         printf("**************\n\n");
+        free(solutionall);
+        solutionall = NULL;
         return parcoursVoisin(mkp, copieS, parcoursAllvoisin, bestS, listTabou, cptForTabou, cptTotal);
     }
     else {
@@ -463,14 +469,18 @@ Solution *parcoursVoisin (tp_Mkp *mkp, Solution *sInitiale, int parcoursAllvoisi
         //Le mouvement tabou est l'inverse du mouvement qu'on va faire pour dégrader la solution ainsi que l'obj value de la solution en cours (du minimum local)
         //Si pour dégradé la solution en fait drop i / add j alors le mouvement tabou est add i / drop j
         TabouMouvement *tabouMouvement;
-        tabouMouvement = malloc(sizeof (TabouMouvement));
+        tabouMouvement = malloc(sizeof(TabouMouvement));
         tabouMouvement->indiceObjToAdd = solLessDegrading->indiceObjToRemove;
         tabouMouvement->indiceObjToRemove = solLessDegrading->indiceObjToAdd;
         tabouMouvement->objValue = copieS->objValue;
         listTabou = updateListTabou(listTabou, tabouMouvement);
+        free(tabouMouvement);
+        //tabouMouvement = NULL;
         //on fait le mouvement dégradant sur copieS pour parcourir ensuite copieS
         Drop(mkp, copieS, solLessDegrading->indiceObjToRemove);
         Add(mkp, copieS, solLessDegrading->indiceObjToAdd);
+        free(solLessDegrading);
+        solLessDegrading = NULL;
         //Puis on parcours les voisins de la solution la moins dégradante
 
         if (cptForTabou < 15000) {
@@ -483,6 +493,9 @@ Solution *parcoursVoisin (tp_Mkp *mkp, Solution *sInitiale, int parcoursAllvoisi
         return bestS;
     }
     //return de la solution
+
+    free(copieS);
+    copieS = NULL;
     return sInitiale;
 }
 
@@ -490,7 +503,7 @@ Solution *parcoursVoisin (tp_Mkp *mkp, Solution *sInitiale, int parcoursAllvoisi
 
 int main(int argc, char *argv[]) {
     tp_Mkp *mkp;
-    Solution *s = NULL, *sAmeliorante = NULL, *sInitiale = NULL;
+    Solution *sol = NULL, *sAmeliorante = NULL, *sInitiale = NULL;
 	if(argc != 4) {
 		printf("Usage: programme nomFichierEntree nomFichierSortie\n");
 		exit(0);
@@ -500,32 +513,32 @@ int main(int argc, char *argv[]) {
     //Init liste tabou
     ListTabou *listTabou = init_tabou_list(sizeListTabou);
 
-    s = alloc_sol(mkp);
-	init_sol(s, mkp);
+    sol = alloc_sol(mkp);
+	init_sol(sol, mkp);
 	printf("Probleme sac a dos : nbr objets : %d, nbr cc : %d, nbr cd : %d\n", mkp->n, mkp->cc, mkp->cd);
 	//On a initialisé la solution comme étant un sac vide, on va ajouter tous les objets pour avoir une solution non réalisable qui possède tous les objets
 	//Puis on va retirer les objets 1 à 1 pour arriver à une solution réalisable
-	remplirSac(mkp, s);
+	remplirSac(mkp, sol);
 
-	printf("Object value : %d\n", s->objValue);
-	printf("slack cc : %d\n", s->slack[0][0]);
-	printf("slack cd : %d\n", s->slack[1][0]);
+	printf("Object value : %d\n", sol->objValue);
+	printf("slack cc : %d\n", sol->slack[0][0]);
+	printf("slack cd : %d\n", sol->slack[1][0]);
 
 	//Il faut maintenant retirer les objets jusqu'à ce que la solution soit réalisable
-	int isNoSolution = obtenirSolutionRealisable(mkp, s);
+	int isNoSolution = obtenirSolutionRealisable(mkp, sol);
 
     printf("Pas de solution ? %d\n", isNoSolution);
-    printf("Object value : %d\n", s->objValue);
-	printf("slack cc : %d\n", s->slack[0][0]);
-	printf("slack cd : %d\n", s->slack[1][0]);
+    printf("Object value : %d\n", sol->objValue);
+	printf("slack cc : %d\n", sol->slack[0][0]);
+	printf("slack cd : %d\n", sol->slack[1][0]);
 
 
     /*Maintenant on recherche une solution améliorante*/
 
     //copie de la sol initiale parce que s va surement être désalloué par parcoursVoisin
-    sInitiale = copieSolution(mkp, s);
+    sInitiale = copieSolution(mkp, sol);
     printf("Calcul en cours, patientez...\n");
-    sAmeliorante = parcoursVoisin(mkp, s, 0, s, listTabou, 0, 0);
+    sAmeliorante = parcoursVoisin(mkp, sol, 0, sol, listTabou, 0, 0);
     //Affichage du résultat de la recherche de solution améliorante
     printf("Ancienne value du sac : %d\n", sInitiale->objValue);
 
@@ -547,11 +560,12 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    //Libévaluen de la mémoire
+    //Libétion de la mémoire
     //printf("test :%d", s->objValue);
     free(listTabou->list);
-    listTabou->list = NULL;
-    free(s);
+    //listTabou->list = NULL;
+    free(listTabou);
+    free_sol(sol);
     free_sol(sInitiale);
     free_sol(sAmeliorante);
     tp_del_mkp(mkp);

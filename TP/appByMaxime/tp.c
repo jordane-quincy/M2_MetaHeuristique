@@ -9,7 +9,7 @@ nomFichierEntree : Le nom du fichier en entrée ainsi que son extension.
 nbVariables : Le nombre de variables (d'objets) manipulées.
 nomFichierSortie : Le nom du fichier de sortie ainsi que son extension.
 */
-void output_best_solution(Solution *s, char *nomFichierEntree, int nbVariables, char *nomFichierSortie){
+void output_best_solution(Solution *sol, char *nomFichierEntree, int nbVariables, char *nomFichierSortie){
     int j;
     FILE* fichier = fopen(nomFichierSortie, "w"); // option "w" afin de reset le fichier si présent
 
@@ -21,11 +21,11 @@ void output_best_solution(Solution *s, char *nomFichierEntree, int nbVariables, 
         fprintf(fichier, "%d\n", nbVariables);
         // ligne 3 : valeur de xj pour chaque j de N (1 si l'objet est pris, 0 sinon)
         for (j = 1; j <= nbVariables; j++) {
-            fprintf(fichier, "%d ", s->x[j]);
+            fprintf(fichier, "%d ", sol->x[j]);
         }
         fprintf(fichier, "\n");
         // ligne 4 : valeur de la solution
-        fprintf(fichier, "%d", s->objValue);
+        fprintf(fichier, "%d", sol->objValue);
 
         // fermeture du fichier
         fclose(fichier);

@@ -28,9 +28,15 @@
     {
         int i;
         free(sol->x);
-        for(i = 0;i < 2;i++) free(sol->slack[i]);
+        sol->x = NULL;
+        for(i = 0;i < 2;i++){
+            free(sol->slack[i]);
+            sol->slack[i] = NULL;
+        }
         free(sol->slack);
+        sol->slack = NULL;
         free(sol);
+        sol = NULL;
    }
 
 /************************************************************************
