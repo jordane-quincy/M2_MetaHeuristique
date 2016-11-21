@@ -310,14 +310,15 @@ si on trouve une solution améliorante on ne veut pas pour l'instant la conserver
 Solution *parcoursVoisin (tp_Mkp *mkp, Solution *sInitiale, int parcoursAllvoisin, Solution *bestS, ListTabou *listTabou, int cptForTabou, int cptTotal) {
     int i, j;
     Solution *copieS = copieSolution(mkp, sInitiale);
-    SolutionAll solutionall;
+    SolutionAll *solutionall;
     int ameliorant = 0;
     //On initialise la solution la moins dégradante pour l'algo tabou
-    SolLessDegrading solLessDegrading;
+    SolLessDegrading * solLessDegrading;
     //On set ce qu'on perdrait à l'infi pour que la première solution non améliorante soit prise en compte
-    solLessDegrading.diffApport = INT_MAX;
-    solLessDegrading.indiceObjToAdd = -1;
-    solLessDegrading.indiceObjToRemove = -1;
+    solLessDegrading = malloc(sizeof (SolLessDegrading));
+    solLessDegrading->diffApport = INT_MAX;
+    solLessDegrading->indiceObjToAdd = -1;
+    solLessDegrading->indiceObjToRemove = -1;
     //On parcours une première fois la solution
     if (parcoursAllvoisin) {
         //TODO parcours en passant par tous les voisins
@@ -340,11 +341,12 @@ Solution *parcoursVoisin (tp_Mkp *mkp, Solution *sInitiale, int parcoursAllvoisi
                         if (copieS->objValue > sInitiale->objValue) {
 
                             printf("solution 0: %d %d\n", i, j);
-                            solutionall.index_deleted_obj = i;
-                            solutionall.index_added_obj = j;
-                            solutionall.difference = copieS->objValue - sInitiale->objValue;
+                            solutionall = malloc(sizeof (SolutionAll));
+                            solutionall->index_deleted_obj = i;
+                            solutionall->index_added_obj = j;
+                            solutionall->difference = copieS->objValue - sInitiale->objValue;
 
-                            printf("solution 1: %d %d %d\n", solutionall.index_deleted_obj, solutionall.index_added_obj, solutionall.difference);
+                            printf("solution 1: %d %d %d\n", solutionall->index_deleted_obj, solutionall->index_added_obj, solutionall->difference);
                             ameliorant = 1;
                         }
                         //else {
@@ -361,8 +363,8 @@ Solution *parcoursVoisin (tp_Mkp *mkp, Solution *sInitiale, int parcoursAllvoisi
 
         if(!ameliorant) return copieS;
 
-        Drop(mkp, copieS, solutionall.index_deleted_obj);
-        Add(mkp, copieS, solutionall.index_added_obj);
+        Drop(mkp, copieS, solutionall->index_deleted_obj);
+        Add(mkp, copieS, solutionall->index_added_obj);
         printf("**************\n\n");
         return parcoursVoisin(mkp, copieS, parcoursAllvoisin, bestS, listTabou, cptForTabou, cptTotal);
     }
@@ -417,11 +419,11 @@ Solution *parcoursVoisin (tp_Mkp *mkp, Solution *sInitiale, int parcoursAllvoisi
                             //On calcul ce qu'on perdrait
                             int diffApport = mkp->a[0][i] - mkp->a[0][j];
                             //On garde uniquement lorsque ce qu'on perdrait est plus petit que ce qu'on a sauvegardé durant les itérations précédents
-                            if (solLessDegrading.diffApport > diffApport) {
+                            if (solLessDegrading->diffApport > diffApport) {
                                 //Si cette solution dégrade moins que la précédente alors on garde cette solution
-                                solLessDegrading.diffApport = diffApport;
-                                solLessDegrading.indiceObjToAdd = j;
-                                solLessDegrading.indiceObjToRemove = i;
+                                solLessDegrading->diffApport = diffApport;
+                                solLessDegrading->indiceObjToAdd = j;
+                                solLessDegrading->indiceObjToRemove = i;
                             }
                         }
                     }
@@ -462,16 +464,16 @@ Solution *parcoursVoisin (tp_Mkp *mkp, Solution *sInitiale, int parcoursAllvoisi
         //Si pour dégradé la solution en fait drop i / add j alors le mouvement tabou est add i / drop j
         TabouMouvement *tabouMouvement;
         tabouMouvement = malloc(sizeof (TabouMouvement));
-        tabouMouvement->indiceObjToAdd = solLessDegrading.indiceObjToRemove;
-        tabouMouvement->indiceObjToRemove = solLessDegrading.indiceObjToAdd;
+        tabouMouvement->indiceObjToAdd = solLessDegrading->indiceObjToRemove;
+        tabouMouvement->indiceObjToRemove = solLessDegrading->indiceObjToAdd;
         tabouMouvement->objValue = copieS->objValue;
         listTabou = updateListTabou(listTabou, tabouMouvement);
         //on fait le mouvement dégradant sur copieS pour parcourir ensuite copieS
-        Drop(mkp, copieS, solLessDegrading.indiceObjToRemove);
-        Add(mkp, copieS, solLessDegrading.indiceObjToAdd);
+        Drop(mkp, copieS, solLessDegrading->indiceObjToRemove);
+        Add(mkp, copieS, solLessDegrading->indiceObjToAdd);
         //Puis on parcours les voisins de la solution la moins dégradante
 
-        if (cptForTabou < 12000) {
+        if (cptForTabou < 15000) {
             //printf("On applique l'algo tabou en parcourant les voisins d'une solution degradante\n");
             //printf("copieS : %d\n", copieS->objValue);
             //printf("bestS : %d\n", bestS->objValue);
