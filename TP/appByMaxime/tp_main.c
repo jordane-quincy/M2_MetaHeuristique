@@ -38,7 +38,7 @@ ObjRatio* alloc_tab(int nbrVar) {
 ListTabou* init_tabou_list (int sizeTabouList) {
     ListTabou *listTabou;
     listTabou = malloc(sizeof (ListTabou));
-    listTabou->list = malloc(sizeof (TabouMouvement) * sizeTabouList);
+    listTabou->list = calloc(sizeTabouList, sizeof(TabouMouvement));
     listTabou->size = 0;
     listTabou->sizeMax = sizeTabouList;
     return listTabou;
@@ -249,7 +249,7 @@ Si la liste tabou est pleine, on supprime le premier mouvement de la liste, on d
 Et on ajoute enfin le nouveau mouvement en fin de liste
 (comportement d'une FIFO
 **/
-ListTabou *updateListTabou (ListTabou *listTabou, TabouMouvement mouvement) {
+ListTabou *updateListTabou (ListTabou *listTabou, TabouMouvement* mouvement) {
     if (listTabou->size == listTabou->sizeMax) {
         //Si on est à la taille max, on décalle la liste tabou et on ajoute le nouveau mouvement à la fin
         int i;
@@ -258,15 +258,15 @@ ListTabou *updateListTabou (ListTabou *listTabou, TabouMouvement mouvement) {
             listTabou->list[i-1].indiceObjToRemove = listTabou->list[i].indiceObjToRemove;
             listTabou->list[i-1].objValue = listTabou->list[i].objValue;
         }
-        listTabou->list[listTabou->size - 1].indiceObjToAdd = mouvement.indiceObjToAdd;
-        listTabou->list[listTabou->size - 1].indiceObjToRemove = mouvement.indiceObjToRemove;
-        listTabou->list[listTabou->size - 1].objValue = mouvement.objValue;
+        listTabou->list[listTabou->size - 1].indiceObjToAdd = mouvement->indiceObjToAdd;
+        listTabou->list[listTabou->size - 1].indiceObjToRemove = mouvement->indiceObjToRemove;
+        listTabou->list[listTabou->size - 1].objValue = mouvement->objValue;
     }
     else {
         //Si la liste n'est pas pleine on ajoute le nouveau mouvement en fin de liste
-        listTabou->list[listTabou->size].indiceObjToAdd = mouvement.indiceObjToAdd;
-        listTabou->list[listTabou->size].indiceObjToRemove = mouvement.indiceObjToRemove;
-        listTabou->list[listTabou->size].objValue = mouvement.objValue;
+        listTabou->list[listTabou->size].indiceObjToAdd = mouvement->indiceObjToAdd;
+        listTabou->list[listTabou->size].indiceObjToRemove = mouvement->indiceObjToRemove;
+        listTabou->list[listTabou->size].objValue = mouvement->objValue;
         listTabou->size++;
     }
     return listTabou;
@@ -460,17 +460,18 @@ Solution *parcoursVoisin (tp_Mkp *mkp, Solution *sInitiale, int parcoursAllvoisi
         //On ajoute le mouvement à la lite des mouvements tabou
         //Le mouvement tabou est l'inverse du mouvement qu'on va faire pour dégrader la solution ainsi que l'obj value de la solution en cours (du minimum local)
         //Si pour dégradé la solution en fait drop i / add j alors le mouvement tabou est add i / drop j
-        TabouMouvement tabouMouvement;
-        tabouMouvement.indiceObjToAdd = solLessDegrading.indiceObjToRemove;
-        tabouMouvement.indiceObjToRemove = solLessDegrading.indiceObjToAdd;
-        tabouMouvement.objValue = copieS->objValue;
+        TabouMouvement *tabouMouvement;
+        tabouMouvement = malloc(sizeof (TabouMouvement));
+        tabouMouvement->indiceObjToAdd = solLessDegrading.indiceObjToRemove;
+        tabouMouvement->indiceObjToRemove = solLessDegrading.indiceObjToAdd;
+        tabouMouvement->objValue = copieS->objValue;
         listTabou = updateListTabou(listTabou, tabouMouvement);
         //on fait le mouvement dégradant sur copieS pour parcourir ensuite copieS
         Drop(mkp, copieS, solLessDegrading.indiceObjToRemove);
         Add(mkp, copieS, solLessDegrading.indiceObjToAdd);
         //Puis on parcours les voisins de la solution la moins dégradante
 
-        if (cptForTabou < 10000) {
+        if (cptForTabou < 12000) {
             //printf("On applique l'algo tabou en parcourant les voisins d'une solution degradante\n");
             //printf("copieS : %d\n", copieS->objValue);
             //printf("bestS : %d\n", bestS->objValue);
