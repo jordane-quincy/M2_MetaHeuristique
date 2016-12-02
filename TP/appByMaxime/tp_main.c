@@ -405,6 +405,7 @@ Solution *parcoursVoisin (tp_Mkp *mkp, Solution *sInitiale, int parcoursAllvoisi
                                 //printf("free sol s\n");
                                 free_sol(sInitiale);
                                 sInitiale = NULL;
+                                free(solLessDegrading);
                                 return parcoursVoisin(mkp, copieS, parcoursAllvoisin, bestS, listTabou, cptForTabou, cptTotal);
                             }
                             else {
@@ -445,7 +446,7 @@ Solution *parcoursVoisin (tp_Mkp *mkp, Solution *sInitiale, int parcoursAllvoisi
         if (bestS->objValue < sInitiale->objValue) {
             //on libère la mémoire de la solution bestS pour mettre bestS à s (uniquement si bestS est différent de la sol initial car on veut garder notre solution initiale
             //free_sol(bestS);
-                free_sol(bestS);
+            free_sol(bestS);
             bestS = sInitiale;
             //on reset également le timer de la recherche tabou pour continuer de rechercher
             cptForTabou = 0;
@@ -479,6 +480,7 @@ Solution *parcoursVoisin (tp_Mkp *mkp, Solution *sInitiale, int parcoursAllvoisi
             //printf("copieS : %d\n", copieS->objValue);
             //printf("bestS : %d\n", bestS->objValue);
             //printf("cpt total : %d\n", cptTotal);
+            free(solLessDegrading);
             return parcoursVoisin(mkp, copieS, parcoursAllvoisin, bestS, listTabou, cptForTabou + 1, cptTotal + 1);
         }
         return bestS;
