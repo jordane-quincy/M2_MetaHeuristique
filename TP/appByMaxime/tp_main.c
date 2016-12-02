@@ -490,7 +490,7 @@ Solution *parcoursVoisin (tp_Mkp *mkp, Solution *sInitiale, int parcoursAllvoisi
 
 int main(int argc, char *argv[]) {
     tp_Mkp *mkp;
-    Solution *s = NULL, *sAmeliorante = NULL, *sInitiale = NULL;
+    Solution *sol = NULL, *sAmeliorante = NULL, *sInitiale = NULL;
 	if(argc != 4) {
 		printf("Usage: programme nomFichierEntree nomFichierSortie\n");
 		exit(0);
@@ -500,32 +500,33 @@ int main(int argc, char *argv[]) {
     //Init liste tabou
     ListTabou *listTabou = init_tabou_list(sizeListTabou);
 
-    s = alloc_sol(mkp);
-	init_sol(s, mkp);
+    sol = alloc_sol(mkp);
+	init_sol(sol, mkp);
 	printf("Probleme sac a dos : nbr objets : %d, nbr cc : %d, nbr cd : %d\n", mkp->n, mkp->cc, mkp->cd);
 	//On a initialisé la solution comme étant un sac vide, on va ajouter tous les objets pour avoir une solution non réalisable qui possède tous les objets
 	//Puis on va retirer les objets 1 à 1 pour arriver à une solution réalisable
-	remplirSac(mkp, s);
+	remplirSac(mkp, sol);
 
-	printf("Object value : %d\n", s->objValue);
-	printf("slack cc : %d\n", s->slack[0][0]);
-	printf("slack cd : %d\n", s->slack[1][0]);
+	printf("Object value : %d\n", sol->objValue);
+	printf("slack cc : %d\n", sol->slack[0][0]);
+	printf("slack cd : %d\n", sol->slack[1][0]);
 
 	//Il faut maintenant retirer les objets jusqu'à ce que la solution soit réalisable
-	int isNoSolution = obtenirSolutionRealisable(mkp, s);
+	int isNoSolution = obtenirSolutionRealisable(mkp, sol);
 
     printf("Pas de solution ? %d\n", isNoSolution);
-    printf("Object value : %d\n", s->objValue);
-	printf("slack cc : %d\n", s->slack[0][0]);
-	printf("slack cd : %d\n", s->slack[1][0]);
+    printf("Object value : %d\n", sol->objValue);
+	printf("slack cc : %d\n", sol->slack[0][0]);
+	printf("slack cd : %d\n", sol->slack[1][0]);
 
 
     /*Maintenant on recherche une solution améliorante*/
 
     //copie de la sol initiale parce que s va surement être désalloué par parcoursVoisin
-    sInitiale = copieSolution(mkp, s);
+    sInitiale = copieSolution(mkp, sol);
     printf("Calcul en cours, patientez...\n");
-    sAmeliorante = parcoursVoisin(mkp, s, 0, s, listTabou, 0, 0);
+    //sAmeliorante = NULL;
+    sAmeliorante = parcoursVoisin(mkp, sol, 0, sol, listTabou, 0, 0);
     //Affichage du résultat de la recherche de solution améliorante
     printf("Ancienne value du sac : %d\n", sInitiale->objValue);
 
@@ -551,9 +552,10 @@ int main(int argc, char *argv[]) {
     //printf("test :%d", s->objValue);
     free(listTabou->list);
     listTabou->list = NULL;
-    free(s);
+    free(listTabou);
+    free(sol);
     free_sol(sInitiale);
-    free_sol(sAmeliorante);
+    //free_sol(sAmeliorante);
     tp_del_mkp(mkp);
 	return 0;
 }
