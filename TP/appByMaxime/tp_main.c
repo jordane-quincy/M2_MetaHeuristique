@@ -251,8 +251,8 @@ Et on ajoute enfin le nouveau mouvement en fin de liste
 **/
 ListTabou *updateListTabou (ListTabou *listTabou, TabouMouvement* mouvement) {
     if (listTabou->size == listTabou->sizeMax) {
-        //Si on est à la taille max, on décalle la liste tabou et on ajoute le nouveau mouvement à la fin
-        int i;
+        //Si on est à la taille max, on décalle la liste tabou et on ajoute le nouveau mouvement à la fin et on free le mouvement qu'on retire de la liste
+        int i = 0;
         for (i = 1; i < listTabou->sizeMax; i++) {
             listTabou->list[i-1].indiceObjToAdd = listTabou->list[i].indiceObjToAdd;
             listTabou->list[i-1].indiceObjToRemove = listTabou->list[i].indiceObjToRemove;
@@ -269,6 +269,7 @@ ListTabou *updateListTabou (ListTabou *listTabou, TabouMouvement* mouvement) {
         listTabou->list[listTabou->size].objValue = mouvement->objValue;
         listTabou->size++;
     }
+    free(mouvement);
     return listTabou;
 }
 
@@ -313,7 +314,7 @@ Solution *parcoursVoisin (tp_Mkp *mkp, Solution *sInitiale, int parcoursAllvoisi
     SolutionAll *solutionall;
     int ameliorant = 0;
     //On initialise la solution la moins dégradante pour l'algo tabou
-    SolLessDegrading * solLessDegrading;
+    SolLessDegrading *solLessDegrading;
     //On set ce qu'on perdrait à l'infi pour que la première solution non améliorante soit prise en compte
     solLessDegrading = malloc(sizeof (SolLessDegrading));
     solLessDegrading->diffApport = INT_MAX;
@@ -551,9 +552,10 @@ int main(int argc, char *argv[]) {
     //printf("test :%d", s->objValue);
     free(listTabou->list);
     listTabou->list = NULL;
+    free(listTabou);
     free(s);
     free_sol(sInitiale);
-    free_sol(sAmeliorante);
+    //free_sol(sAmeliorante);
     tp_del_mkp(mkp);
 	return 0;
 }
