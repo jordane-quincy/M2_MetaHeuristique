@@ -295,10 +295,10 @@ int mouvementNotInTabouList (int indiceObjToDrop, int indiceObjToAdd, ListTabou 
     return 1;
 }
 
-void affichageListTabou (ListTabou listTabou) {
+void affichageListTabou (ListTabou *listTabou) {
     int i;
-    for (i = 0; i < listTabou.size; i++) {
-        printf("objValueTabou : %d\n", listTabou.list[i].objValue);
+    for (i = 0; i < listTabou->size; i++) {
+        printf("objValueTabou : %d\n", listTabou->list[i].objValue);
     }
 }
 
