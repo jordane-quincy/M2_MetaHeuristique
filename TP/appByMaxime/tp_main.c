@@ -313,6 +313,10 @@ Solution *parcoursVoisin (tp_Mkp *mkp, Solution *sInitiale, int parcoursAllvoisi
     Solution *copieS = copieSolution(mkp, sInitiale);
     //Solution *copieS = sInitiale;
     SolutionAll *solutionall;
+    solutionall = malloc(sizeof (SolutionAll));
+    solutionall->difference = -INT_MAX;
+    solutionall->index_added_obj = -1;
+    solutionall->index_deleted_obj = -1;
     int ameliorant = 0;
     //On initialise la solution la moins dégradante pour l'algo tabou
     SolLessDegrading *solLessDegrading;
@@ -407,6 +411,7 @@ Solution *parcoursVoisin (tp_Mkp *mkp, Solution *sInitiale, int parcoursAllvoisi
                                 free_sol(sInitiale);
                                 sInitiale = NULL;
                                 free(solLessDegrading);
+                                free(solutionall);
                                 return parcoursVoisin(mkp, copieS, parcoursAllvoisin, bestS, listTabou, cptForTabou, cptTotal);
                             }
                         }
@@ -455,14 +460,9 @@ Solution *parcoursVoisin (tp_Mkp *mkp, Solution *sInitiale, int parcoursAllvoisi
         Drop(mkp, copieS, solLessDegrading->indiceObjToRemove);
         Add(mkp, copieS, solLessDegrading->indiceObjToAdd);
         //Puis on parcours les voisins de la solution la moins dégradante
-
+        free(solLessDegrading);
+        free(solutionall);
         if (cptForTabou < 15000) {
-            //printf("On applique l'algo tabou en parcourant les voisins d'une solution degradante\n");
-            //printf("copieS : %d\n", copieS->objValue);
-            //printf("bestS : %d\n", bestS->objValue);
-            //printf("cpt total : %d\n", cptTotal);
-            free(solLessDegrading);
-
             return parcoursVoisin(mkp, copieS, parcoursAllvoisin, bestS, listTabou, cptForTabou + 1, cptTotal + 1);
         }
         if (bestS != copieS) {
