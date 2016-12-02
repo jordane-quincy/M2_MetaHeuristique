@@ -311,6 +311,7 @@ si on trouve une solution améliorante on ne veut pas pour l'instant la conserver
 Solution *parcoursVoisin (tp_Mkp *mkp, Solution *sInitiale, int parcoursAllvoisin, Solution *bestS, ListTabou *listTabou, int cptForTabou, int cptTotal) {
     int i, j;
     Solution *copieS = copieSolution(mkp, sInitiale);
+    //Solution *copieS = sInitiale;
     SolutionAll *solutionall;
     solutionall = malloc(sizeof (SolutionAll));
     solutionall->difference = -INT_MAX;
@@ -435,6 +436,7 @@ Solution *parcoursVoisin (tp_Mkp *mkp, Solution *sInitiale, int parcoursAllvoisi
         }
     }
     else {
+
         for (i = 1; i<= mkp->n; i++) {
             if (copieS->x[i] == 1 && isRemovePossible(mkp, copieS, i)) {//Si on a pris l'objet i dans la solution et si on peut enlever l'objet (on doit toujours respecter les cd)
                 //On l'enlève
@@ -473,15 +475,12 @@ Solution *parcoursVoisin (tp_Mkp *mkp, Solution *sInitiale, int parcoursAllvoisi
                                 free(solutionall);
                                 return parcoursVoisin(mkp, copieS, parcoursAllvoisin, bestS, listTabou, cptForTabou, cptTotal);
                             }
-                            else {
-                                Drop(mkp, copieS, j);
-                            }
                         }
                         else {
-                            /**Si en faisant cette échange la solution n'est pas améliorante
-                            On va stocker la moins pire des solutions non améliorantes
-                            Pour pouvoir partir de cette solution avec l'algorithme tabou
-                            (dans le cas où on ne trouve plus de solution améliorante)**/
+                            //Si en faisant cette échange la solution n'est pas améliorante
+                            //On va stocker la moins pire des solutions non améliorantes
+                            //Pour pouvoir partir de cette solution avec l'algorithme tabou
+                            //(dans le cas où on ne trouve plus de solution améliorante)
 
                             //On calcul ce qu'on perdrait
                             int diffApport = mkp->a[0][i] - mkp->a[0][j];
@@ -501,24 +500,12 @@ Solution *parcoursVoisin (tp_Mkp *mkp, Solution *sInitiale, int parcoursAllvoisi
         }
         /**A cette étape on n'a pas trouvé de solution améliorante, on va donc continuer avec la solution la moins dégradante toute en interdisant par la suite de revenir à cette solution (algo tabou)
         Il faut également stocker la solution en cours puisque c'est la meilleure solution du voisinage
-        (on la compara à la fin de l'algo avec nos autres "meilleures solutions" pour voir quelle est la meilleure des meilleures solutions)
-        **/
-        //Si notre meilleur solution (des précédents parcours de voisin) est moins bonne que celle-ci on la conserve pour le résultat final
-        if (bestS->objValue < sInitiale->objValue) {
-            //on libère la mémoire de la solution bestS pour mettre bestS à s (uniquement si bestS est différent de la sol initial car on veut garder notre solution initiale
-            free_sol(bestS);
-            bestS = sInitiale;
-            //on reset également le timer de la recherche tabou pour continuer de rechercher
-            cptForTabou = 0;
+        (on la compara à la fin de l'algo avec nos autres "meilleures solutions" pour voir quelle est la meilleure des meilleures solutions)**/
 
-        }
-        else {
-            //on libère la mémoire de s uniquement si s et bestS sont différent (en se basant sur l'objValue
-            if (bestS != sInitiale) {
-                free_sol(sInitiale);
-                sInitiale = NULL;
-            }
-
+        //on libère la mémoire de s uniquement si s et bestS sont différent (en se basant sur l'objValue
+        if (bestS != sInitiale) {
+            free_sol(sInitiale);
+            sInitiale = NULL;
         }
 
         //On ajoute le mouvement à la lite des mouvements tabou
@@ -547,6 +534,7 @@ Solution *parcoursVoisin (tp_Mkp *mkp, Solution *sInitiale, int parcoursAllvoisi
         if (bestS != copieS) {
             free(copieS);
         }
+        //printf("cptTotal %d",cptTotal);
         return bestS;
     }
     //return de la solution
