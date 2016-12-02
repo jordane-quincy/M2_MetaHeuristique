@@ -313,10 +313,6 @@ Solution *parcoursVoisin (tp_Mkp *mkp, Solution *sInitiale, int parcoursAllvoisi
     Solution *copieS = copieSolution(mkp, sInitiale);
     //Solution *copieS = sInitiale;
     SolutionAll *solutionall;
-    solutionall = malloc(sizeof (SolutionAll));
-    solutionall->difference = -INT_MAX;
-    solutionall->index_added_obj = -1;
-    solutionall->index_deleted_obj = -1;
     int ameliorant = 0;
     //On initialise la solution la moins dégradante pour l'algo tabou
     SolLessDegrading *solLessDegrading;
@@ -337,106 +333,44 @@ Solution *parcoursVoisin (tp_Mkp *mkp, Solution *sInitiale, int parcoursAllvoisi
                     //Si l'objet n'est pas celui qu'on vient de retirer et si l'objet j n'est pas dans le sac,
                     //et si la valeur (dans la fonction objectif) de l'objet qu'on veut tenter d'ajouter est supérieur à celui qu'on vient de retirer
                     //et qu'on peut l'ajouter en respectant les contraintes
-                    if (j != i && copieS->x[j] == 0 && isAddPossible(mkp, copieS, j) && mouvementNotInTabouList(i, j, listTabou, copieS->objValue + mkp->a[0][j])) {
-                        if (mkp->a[0][j] > mkp->a[0][i]) {
-                            //Alors on ajoute dans le sac
-                            Add(mkp, copieS, j);
-                            //On regarde si cette nouvelle solution est améliorante
-                            //(normalement elle est forcément améliorante puisqu'on ajoute uniquement les objets avec une valeur supérieur à l'objet qu'on a enlevé)
-                            if (copieS->objValue - sInitiale->objValue > solutionall->difference) {
-                                //Si ce qu'on gagne avec copieS est supérieur à ce qu'on gagnait avec notre meilleure solution améliorante
-                                //alors notre meilleure solution améliorante doit valoir copieS
-                                solutionall->index_deleted_obj = i;
-                                solutionall->index_added_obj = j;
-                                solutionall->difference = copieS->objValue - sInitiale->objValue;
-                                ameliorant = 1;
-                            }
-                            Drop(mkp, copieS, j);
-                        }
-                        else {
-                            /**Si en faisant cette échange la solution n'est pas améliorante
-                            On va stocker la moins pire des solutions non améliorantes
-                            Pour pouvoir partir de cette solution avec l'algorithme tabou
-                            (dans le cas où on ne trouve plus de solution améliorante)**/
+                    if (j != i && copieS->x[j] == 0 && mkp->a[0][j] > mkp->a[0][i] && isAddPossible(mkp, copieS, j)) {
+                        printf("DROP/ADD\n");
+                        //Alors on ajoute dans le sac
+                        Add(mkp, copieS, j);
+                        //On regarde si cette nouvelle solution est améliorante
+                        //(normalement elle est forcément améliorante puisqu'on ajoute uniquement les objets avec une valeur supérieur à l'objet qu'on a enlevé)
+                        printf("OBJVALUE %d %d\n",copieS->objValue, sInitiale->objValue);
+                        if (copieS->objValue > sInitiale->objValue) {
 
-                            //On calcul ce qu'on perdrait
-                            int diffApport = mkp->a[0][i] - mkp->a[0][j];
-                            //On garde uniquement lorsque ce qu'on perdrait est plus petit que ce qu'on a sauvegardé durant les itérations précédents
-                            if (solLessDegrading->diffApport > diffApport) {
-                                //Si cette solution dégrade moins que la précédente alors on garde cette solution
-                                solLessDegrading->diffApport = diffApport;
-                                solLessDegrading->indiceObjToAdd = j;
-                                solLessDegrading->indiceObjToRemove = i;
-                            }
+                            printf("solution 0: %d %d\n", i, j);
+                            solutionall = malloc(sizeof (SolutionAll));
+                            solutionall->index_deleted_obj = i;
+                            solutionall->index_added_obj = j;
+                            solutionall->difference = copieS->objValue - sInitiale->objValue;
+
+                            printf("solution 1: %d %d %d\n", solutionall->index_deleted_obj, solutionall->index_added_obj, solutionall->difference);
+                            ameliorant = 1;
                         }
+                        //else {
+                            Drop(mkp, copieS, j);
+                        //}
                     }
                 }
                 //Si on n'a pas trouvé de solution améliorante, on rajoute l'objet qu'on a enlevé au départ et on passe à l'objet suivant
                 Add(mkp, copieS, i);
             }
         }
-        if(!ameliorant) {
-            /**A cette étape on n'a pas trouvé de solution améliorante, on va donc continuer avec la solution la moins dégradante toute en interdisant par la suite de revenir à cette solution (algo tabou)
-            Il faut également stocker la solution en cours puisque c'est la meilleure solution du voisinage
-            (on la compara à la fin de l'algo avec nos autres "meilleures solutions" pour voir quelle est la meilleure des meilleures solutions)
-            **/
-            if (bestS != sInitiale) {
-                free_sol(sInitiale);
-                sInitiale = NULL;
-            }
+        free_sol(sInitiale);
+        sInitiale = NULL;
 
-            //On ajoute le mouvement à la lite des mouvements tabou
-            //Le mouvement tabou est l'inverse du mouvement qu'on va faire pour dégrader la solution ainsi que l'obj value de la solution en cours (du minimum local)
-            //Si pour dégradé la solution en fait drop i / add j alors le mouvement tabou est add i / drop j
-            TabouMouvement *tabouMouvement;
-            tabouMouvement = malloc(sizeof (TabouMouvement));
-            tabouMouvement->indiceObjToAdd = solLessDegrading->indiceObjToRemove;
-            tabouMouvement->indiceObjToRemove = solLessDegrading->indiceObjToAdd;
-            tabouMouvement->objValue = copieS->objValue;
-            listTabou = updateListTabou(listTabou, tabouMouvement);
-            //on fait le mouvement dégradant sur copieS pour parcourir ensuite copieS
-            Drop(mkp, copieS, solLessDegrading->indiceObjToRemove);
-            Add(mkp, copieS, solLessDegrading->indiceObjToAdd);
-            //Puis on parcours les voisins de la solution la moins dégradante
+        if(!ameliorant) return copieS;
 
-            free(solLessDegrading);
-            free(solutionall);
-            if (cptForTabou < 10000) {
-                //printf("On applique l'algo tabou en parcourant les voisins d'une solution degradante\n");
-                //printf("copieS : %d\n", copieS->objValue);
-                //printf("bestS : %d\n", bestS->objValue);
-                //printf("cpt total : %d\n", cptTotal);
-                return parcoursVoisin(mkp, copieS, parcoursAllvoisin, bestS, listTabou, cptForTabou + 1, cptTotal + 1);
-            }
-            if (bestS != copieS) {
-                free(copieS);
-            }
-
-            return bestS;
-        }
-        else {
-            //Si on a trouvé une solution améliorante on la prend et on reparcours les voisins
-            Drop(mkp, copieS, solutionall->index_deleted_obj);
-            Add(mkp, copieS, solutionall->index_added_obj);
-
-            //Si copieS est meilleure que bestS alors on passe bestS à copieS
-            if (copieS->objValue > bestS->objValue) {
-                if (bestS != sInitiale) {
-                    free_sol(bestS);
-                }
-                bestS = copieS;
-                //reset du compteur pour la recherche tabou pour indiquer qu'il faut continuer de chercher
-                cptForTabou = 0;
-            }
-            free_sol(sInitiale);
-            sInitiale = NULL;
-            free(solLessDegrading);
-            free(solutionall);
-            return parcoursVoisin(mkp, copieS, parcoursAllvoisin, bestS, listTabou, cptForTabou, cptTotal);
-        }
+        Drop(mkp, copieS, solutionall->index_deleted_obj);
+        Add(mkp, copieS, solutionall->index_added_obj);
+        printf("**************\n\n");
+        return parcoursVoisin(mkp, copieS, parcoursAllvoisin, bestS, listTabou, cptForTabou, cptTotal);
     }
     else {
-
         for (i = 1; i<= mkp->n; i++) {
             if (copieS->x[i] == 1 && isRemovePossible(mkp, copieS, i)) {//Si on a pris l'objet i dans la solution et si on peut enlever l'objet (on doit toujours respecter les cd)
                 //On l'enlève
@@ -463,6 +397,7 @@ Solution *parcoursVoisin (tp_Mkp *mkp, Solution *sInitiale, int parcoursAllvoisi
                                     if (bestS != sInitiale) {
                                         free_sol(bestS);
                                     }
+
                                     bestS = copieS;
                                     //reset du compteur pour la recherche tabou pour indiquer qu'il faut continuer de chercher
                                     cptForTabou = 0;
@@ -472,7 +407,6 @@ Solution *parcoursVoisin (tp_Mkp *mkp, Solution *sInitiale, int parcoursAllvoisi
                                 free_sol(sInitiale);
                                 sInitiale = NULL;
                                 free(solLessDegrading);
-                                free(solutionall);
                                 return parcoursVoisin(mkp, copieS, parcoursAllvoisin, bestS, listTabou, cptForTabou, cptTotal);
                             }
                         }
@@ -498,9 +432,9 @@ Solution *parcoursVoisin (tp_Mkp *mkp, Solution *sInitiale, int parcoursAllvoisi
                 Add(mkp, copieS, i);
             }
         }
-        /**A cette étape on n'a pas trouvé de solution améliorante, on va donc continuer avec la solution la moins dégradante toute en interdisant par la suite de revenir à cette solution (algo tabou)
-        Il faut également stocker la solution en cours puisque c'est la meilleure solution du voisinage
-        (on la compara à la fin de l'algo avec nos autres "meilleures solutions" pour voir quelle est la meilleure des meilleures solutions)**/
+        //A cette étape on n'a pas trouvé de solution améliorante, on va donc continuer avec la solution la moins dégradante toute en interdisant par la suite de revenir à cette solution (algo tabou)
+        //Il faut également stocker la solution en cours puisque c'est la meilleure solution du voisinage
+        //(on la compara à la fin de l'algo avec nos autres "meilleures solutions" pour voir quelle est la meilleure des meilleures solutions)
 
         //on libère la mémoire de s uniquement si s et bestS sont différent (en se basant sur l'objValue
         if (bestS != sInitiale) {
@@ -522,13 +456,13 @@ Solution *parcoursVoisin (tp_Mkp *mkp, Solution *sInitiale, int parcoursAllvoisi
         Add(mkp, copieS, solLessDegrading->indiceObjToAdd);
         //Puis on parcours les voisins de la solution la moins dégradante
 
-        free(solLessDegrading);
-        free(solutionall);
         if (cptForTabou < 15000) {
             //printf("On applique l'algo tabou en parcourant les voisins d'une solution degradante\n");
             //printf("copieS : %d\n", copieS->objValue);
             //printf("bestS : %d\n", bestS->objValue);
             //printf("cpt total : %d\n", cptTotal);
+            free(solLessDegrading);
+
             return parcoursVoisin(mkp, copieS, parcoursAllvoisin, bestS, listTabou, cptForTabou + 1, cptTotal + 1);
         }
         if (bestS != copieS) {
