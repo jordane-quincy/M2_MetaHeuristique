@@ -393,7 +393,7 @@ Solution *parcoursVoisin (tp_Mkp *mkp, Solution *sInitiale, int parcoursAllvoisi
                                 //Si la solution améliorante qu'on vient de trouver est meilleure que la meilleure solution qu'on stoque avec l'algo tabou alors on remplace notre bestS par la solution améliorante
                                 //Qui sera alors notre nouvelle meilleure solution
                                 if (copieS->objValue > bestS->objValue) {
-                                    if (bestS->objValue != sInitiale->objValue) {
+                                    if (bestS != sInitiale) {
                                         free_sol(bestS);
                                     }
 
@@ -454,7 +454,7 @@ Solution *parcoursVoisin (tp_Mkp *mkp, Solution *sInitiale, int parcoursAllvoisi
         }
         else {
             //on libère la mémoire de s uniquement si s et bestS sont différent (en se basant sur l'objValue
-            if (bestS->objValue != sInitiale->objValue) {
+            if (bestS != sInitiale) {
                 free_sol(sInitiale);
                 sInitiale = NULL;
             }
@@ -482,6 +482,9 @@ Solution *parcoursVoisin (tp_Mkp *mkp, Solution *sInitiale, int parcoursAllvoisi
             //printf("cpt total : %d\n", cptTotal);
             free(solLessDegrading);
             return parcoursVoisin(mkp, copieS, parcoursAllvoisin, bestS, listTabou, cptForTabou + 1, cptTotal + 1);
+        }
+        if (bestS != copieS) {
+            free(copieS);
         }
         return bestS;
     }
