@@ -478,7 +478,7 @@ Solution *parcoursVoisin (tp_Mkp *mkp, Solution *sInitiale, int parcoursAllvoisi
 
 
 int main(int argc, char *argv[]) {
-    tp_Mkp *mkp;
+    tp_Mkp *mkp = NULL;
     Solution *sol = NULL, *sAmeliorante = NULL, *sInitiale = NULL;
 	if(argc != 4) {
 		printf("Usage: programme nomFichierEntree nomFichierSortie\n");
@@ -542,9 +542,10 @@ int main(int argc, char *argv[]) {
     free(listTabou->list);
     listTabou->list = NULL;
     free(listTabou);
-    free(sol);
     free_sol(sInitiale);
-    //free_sol(sAmeliorante);
+    free_sol(sAmeliorante);
+    // WTF ?! free_sol(sol);
+    free(sol);
     tp_del_mkp(mkp);
 	return 0;
 }
