@@ -462,7 +462,7 @@ Solution *parcoursVoisin (tp_Mkp *mkp, Solution *sInitiale, int parcoursAllvoisi
         //Puis on parcours les voisins de la solution la moins dégradante
         free(solLessDegrading);
         free(solutionall);
-        if (cptForTabou < 15000) {
+        if (cptForTabou < 15762) {
             return parcoursVoisin(mkp, copieS, parcoursAllvoisin, bestS, listTabou, cptForTabou + 1, cptTotal + 1);
         }
         if (bestS != copieS) {
@@ -537,14 +537,13 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    //Libévaluen de la mémoire
+    //Libération de la mémoire
     //printf("test :%d", s->objValue);
     free(listTabou->list);
     listTabou->list = NULL;
     free(listTabou);
     free_sol(sInitiale);
     free_sol(sAmeliorante);
-    // WTF ?! free_sol(sol);
     free(sol);
     tp_del_mkp(mkp);
 	return 0;
