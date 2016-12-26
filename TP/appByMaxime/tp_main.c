@@ -6,6 +6,13 @@
 #include "stdlib.h"
 #include "limits.h"
 
+#ifdef _WINDOWS
+#include <windows.h>
+#else
+#include <unistd.h>
+#define Sleep(x) usleep((x)*1000)
+#endif
+
 typedef struct {
      int indexObj;
      double value;
@@ -475,17 +482,33 @@ Solution *parcoursVoisin (tp_Mkp *mkp, Solution *sInitiale, int parcoursAllvoisi
     return sInitiale;
 }
 
-
+int timeout(int timestampDebut, int dureeEnSecondes){
+    int timestampNow = (int)time(NULL);
+    if( (timestampNow - timestampDebut) >= dureeEnSecondes ){
+        printf("Temps ecoule. Game Over.\n");
+        //Our code run out of time friends :-(
+        exit(999);
+    }
+    return 1;
+}
 
 int main(int argc, char *argv[]) {
+    int start = (int)time(NULL);
     tp_Mkp *mkp = NULL;
     Solution *sol = NULL, *sAmeliorante = NULL, *sInitiale = NULL;
-	if(argc != 4) {
-		printf("Usage: programme nomFichierEntree nomFichierSortie\n");
+	if(argc != 5) {
+		printf("Usage: programme nomFichierEntree nomFichierSortie tempsEnSeconde\n");
 		exit(0);
     }
     mkp = tp_load_mkp(argv[1]);
     int sizeListTabou = atoi(argv[3]);
+    int temps = atoi(argv[4]);
+
+    printf("debut loop a %d\n", start);
+    while(timeout(start, temps)){
+        Sleep(1);
+    }
+
     //Init liste tabou
     ListTabou *listTabou = init_tabou_list(sizeListTabou);
 
