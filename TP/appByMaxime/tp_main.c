@@ -551,16 +551,15 @@ int main(int argc, char *argv[]) {
     int start = (int)time(NULL);
     tp_Mkp *mkp = NULL;
     Solution *sol = NULL, *sAmeliorante = NULL, *sInitiale = NULL;
-	if(argc != 5) {
+	if(argc != 4) {
 		printf("Usage: programme nomFichierEntree nomFichierSortie tempsEnSeconde\n");
 		exit(0);
     }
     mkp = tp_load_mkp(argv[1]);
-    int sizeListTabou = atoi(argv[3]);
-    int temps = atoi(argv[4]);
+    int temps = atoi(argv[3]);
 
     /*Init liste tabou*/
-    ListTabou *listTabou = init_tabou_list(sizeListTabou);
+    ListTabou *listTabou = init_tabou_list(15);
 
     sol = alloc_sol(mkp);
 	init_sol(sol, mkp);
