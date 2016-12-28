@@ -666,10 +666,12 @@ int main(int argc, char *argv[]) {
     Puis on utilisera d'autres algorithmes afin de partir avec de nouvelles solutions initiales
     Une fois qu'on aura utilisé tous nos algos, on fera du random
     **/
+    /*on utilise un compteur pour le choix des tris pour la solution initiale à plus de 5 en passe en choix random*/
+    int cpt = 1;
     while(timeout(startTime, tempsMax, bestS, sAmeliorante, instance, outputFileName, mkp)) {
         timeout(startTime, tempsMax, bestS, sAmeliorante, instance, outputFileName, mkp);
         printf("recherche d'une solution\n");
-        sAmeliorante = parcoursVoisin(mkp, sol, 0, sol, listTabou, 0, 0, startTime, tempsMax, instance, outputFileName, bestS);
+        sAmeliorante = parcoursVoisin(mkp, sol, 1, sol, listTabou, 0, 0, startTime, tempsMax, instance, outputFileName, bestS);
         printf("solution trouvée résultat de la fonction objectif : %d\n", sAmeliorante->objValue);
         //On garde la meilleure des solutions entre bestS et sAmeliorante
         if (sAmeliorante->objValue > bestS->objValue) {
@@ -688,7 +690,8 @@ int main(int argc, char *argv[]) {
         sol = alloc_sol(mkp);
         init_sol(sol, mkp);
         remplirSac(mkp, sol);
-        obtenirSolutionRealisable(mkp, sol, 0);
+        obtenirSolutionRealisable(mkp, sol, cpt);
+        cpt++;
         //On est prêt pour recommencer
     }
 
