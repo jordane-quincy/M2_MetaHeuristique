@@ -5,6 +5,7 @@
 #include "stdio.h"
 #include "stdlib.h"
 #include "limits.h"
+#include "time.h"
 
 #ifdef _WINDOWS
 #include <windows.h>
@@ -36,9 +37,20 @@ typedef struct {
     TabouMouvement *list;
 } ListTabou;
 
-int timeout(int timestampDebut, int dureeEnSecondes){
-    int timestampNow = (int)time(NULL);
-    if( (timestampNow - timestampDebut) >= dureeEnSecondes ){
+int timeout(int startTime, int tempsMax, Solution *sAmeliorante, Solution *currentSolution, char *instance, char *outputFileName, tp_Mkp *mkp){
+    int currentTime = (int)time(NULL);
+    if( (currentTime - startTime) >= tempsMax ){
+        //On écrit la meilleure solution qu'on ait
+        if (sAmeliorante->objValue >= currentSolution->objValue) {
+            printf("Nouvelle value du sac : %d\n", sAmeliorante->objValue);
+            output_best_solution(sAmeliorante,instance,mkp->n,outputFileName);
+        }
+        else {
+            printf("Nouvelle value du sac : %d\n", sAmeliorante->objValue);
+            output_best_solution(currentSolution,instance,mkp->n,outputFileName);
+        }
+        free_sol(sAmeliorante);
+        free_sol(currentSolution);
         printf("Temps ecoule. Game Over.\n");
         /* Our code run out of time friends :-( */
         exit(999);
@@ -219,6 +231,57 @@ int* getTableauOrdonneByCoeffDemandeSurPoids(tp_Mkp *mkp, int *ordre) {
     return ordre;
 }
 
+int* getTableauOrdonneByIndex(tp_Mkp *mkp, int *ordre) {
+    ObjRatio *tabOrdonne;
+    tabOrdonne = alloc_tab(mkp->n);
+    int i;
+    int j;
+    for (i = 1; i <= mkp->n; i++) {
+        tabOrdonne[i].indexObj = i;
+        tabOrdonne[i].value = i;
+    }
+    qsort((void *)(tabOrdonne + 1), (size_t) mkp->n, (size_t)sizeof(ObjRatio), sortRatioAsc);
+    for (j = 1; j<= mkp->n; j++) {
+        ordre[j] = tabOrdonne[j].indexObj;
+    }
+    free(tabOrdonne);
+    return ordre;
+}
+
+int* getTableauOrdonneByReverseIndex(tp_Mkp *mkp, int *ordre) {
+    ObjRatio *tabOrdonne;
+    tabOrdonne = alloc_tab(mkp->n);
+    int i;
+    int j;
+    for (i = 1; i <= mkp->n; i++) {
+        tabOrdonne[i].indexObj = i;
+        tabOrdonne[i].value = i;
+    }
+    qsort((void *)(tabOrdonne + 1), (size_t) mkp->n, (size_t)sizeof(ObjRatio), sortRatioDesc);
+    for (j = 1; j<= mkp->n; j++) {
+        ordre[j] = tabOrdonne[j].indexObj;
+    }
+    free(tabOrdonne);
+    return ordre;
+}
+
+int* getTableauOrdonneRandom(tp_Mkp *mkp, int *ordre) {
+    ObjRatio *tabOrdonne;
+    tabOrdonne = alloc_tab(mkp->n);
+    int i;
+    int j;
+    for (i = 1; i <= mkp->n; i++) {
+        tabOrdonne[i].indexObj = i;
+        tabOrdonne[i].value = rand();
+    }
+    qsort((void *)(tabOrdonne + 1), (size_t) mkp->n, (size_t)sizeof(ObjRatio), sortRatioAsc);
+    for (j = 1; j<= mkp->n; j++) {
+        ordre[j] = tabOrdonne[j].indexObj;
+    }
+    free(tabOrdonne);
+    return ordre;
+}
+
 /**
 Méthode permettant de remplir la solution avec tous les objets du sac
 **/
@@ -234,19 +297,28 @@ void *remplirSac (tp_Mkp *mkp, Solution *s) {
 Méthode permettant d'obtenir une solution réalisable à partir d'une solution non réalisable où tout les objets sont pris dans la solution
 Renvoie 1 si on n'a pas trouvé de solution réalisable, 0 sinon
 **/
-int obtenirSolutionRealisable (tp_Mkp *mkp, Solution *s) {
+int obtenirSolutionRealisable (tp_Mkp *mkp, Solution *s, int algoToUse) {
     int isNoSolution = 0;
     int i = 0;
     /*On récupère l'ordre par lequel on va retirer les objets*/
     int *ordre;
     ordre = malloc(sizeof (int) * (mkp->n + 1));
-    /*ordre = getTableauOrdonneByCoeff(mkp, ordre);*/
-    ordre = getTableauOrdonneByCoeffDemandeSurPoids(mkp, ordre);
-    /*ordre = getTableauOrdonneByCoeffPoidSurDemandePlusValeur(mkp, ordre);*/
-    /*ordre = getTableauOrdonneByCoeff(mkp, ordre);*/
-    printf("nbr d'objet : %d\n", mkp->n);
+    if (algoToUse == 0)
+        ordre = getTableauOrdonneByCoeff(mkp, ordre);
+    else if (algoToUse == 1)
+        ordre = getTableauOrdonneByCoeffDemandeSurPoids(mkp, ordre);
+    else if (algoToUse == 2)
+        ordre = getTableauOrdonneByCoeffPoidSurDemandePlusValeur(mkp, ordre);
+    else if (algoToUse == 3)
+        ordre = getTableauOrdonneByLessDemand(mkp, ordre);
+    else if (algoToUse == 4)
+        ordre = getTableauOrdonneByIndex(mkp, ordre);
+    else if (algoToUse == 5)
+        ordre = getTableauOrdonneByReverseIndex(mkp, ordre);
+    else
+        ordre = getTableauOrdonneRandom(mkp, ordre);
+
     /*Check si on peut retirer l'objet, si oui on le retire*/
-    printf("Nbr de cc non valid : %d\n", s->slack[0][0]);
     while (s->slack[0][0] > 0 && isNoSolution == 0) {
         i++;
         if (i > mkp->n) {
@@ -325,8 +397,8 @@ On doit à chaque étape libérer la mémoire si cela est possible
 Il nous faut donc un compteur car on ne veut pas libérer la solution de base, par contre une fois commencé les appels récursif,
 si on trouve une solution améliorante on ne veut pas pour l'instant la conserver et donc on peut la libérer
 **/
-Solution *parcoursVoisin (tp_Mkp *mkp, Solution *sInitiale, int parcoursAllvoisin, Solution *bestS, ListTabou *listTabou, int cptForTabou, int cptTotal, int start, int temps) {
-    timeout(start, temps);
+Solution *parcoursVoisin (tp_Mkp *mkp, Solution *sInitiale, int parcoursAllvoisin, Solution *bestS, ListTabou *listTabou, int cptForTabou, int cptTotal, int startTime, int tempsMax, char *instance, char *outputFileName, Solution *globalBestS) {
+    timeout(startTime, tempsMax, globalBestS, bestS, instance, outputFileName, mkp);
     int i, j;
     Solution *copieS = copieSolution(mkp, sInitiale);
     SolutionAll *solutionall;
@@ -345,13 +417,13 @@ Solution *parcoursVoisin (tp_Mkp *mkp, Solution *sInitiale, int parcoursAllvoisi
     /*On parcours une première fois la solution*/
     if (parcoursAllvoisin) {
         for (i = 1; i<= mkp->n; i++) {
-            timeout(start, temps);
+            /*timeout(startTime, tempsMax);*/
             if (copieS->x[i] == 1 && isRemovePossible(mkp, copieS, i)) {/*Si on a pris l'objet i dans la solution et si on peut enlever l'objet (on doit toujours respecter les cd)*/
                 /*On l'enlève*/
                 Drop(mkp, copieS, i);
                 /*Puis on reparcours la liste des objets pour savoir quel objet remettre*/
                 for (j = 1; j <= mkp->n; j++) {
-                    timeout(start, temps);
+                    /*timeout(startTime, tempsMax);*/
                     /*Si l'objet n'est pas celui qu'on vient de retirer et si l'objet j n'est pas dans le sac,
                     et si la valeur (dans la fonction objectif) de l'objet qu'on veut tenter d'ajouter est supérieur à celui qu'on vient de retirer
                     et qu'on peut l'ajouter en respectant les contraintes*/
@@ -420,7 +492,7 @@ Solution *parcoursVoisin (tp_Mkp *mkp, Solution *sInitiale, int parcoursAllvoisi
             free(solLessDegrading);
             free(solutionall);
             if (cptForTabou < 3000) {
-                return parcoursVoisin(mkp, copieS, parcoursAllvoisin, bestS, listTabou, cptForTabou + 1, cptTotal + 1, start, temps);
+                return parcoursVoisin(mkp, copieS, parcoursAllvoisin, bestS, listTabou, cptForTabou + 1, cptTotal + 1, startTime, tempsMax, instance, outputFileName, globalBestS);
             }
             if (bestS != copieS) {
                 free(copieS);
@@ -445,18 +517,18 @@ Solution *parcoursVoisin (tp_Mkp *mkp, Solution *sInitiale, int parcoursAllvoisi
             sInitiale = NULL;
             free(solLessDegrading);
             free(solutionall);
-            return parcoursVoisin(mkp, copieS, parcoursAllvoisin, bestS, listTabou, cptForTabou, cptTotal, start, temps);
+            return parcoursVoisin(mkp, copieS, parcoursAllvoisin, bestS, listTabou, cptForTabou, cptTotal, startTime, tempsMax, instance, outputFileName, globalBestS);
         }
     }
     else {
         for (i = 1; i<= mkp->n; i++) {
-            timeout(start, temps);
+            /*timeout(startTime, tempsMax);*/
             if (copieS->x[i] == 1 && isRemovePossible(mkp, copieS, i)) {/*Si on a pris l'objet i dans la solution et si on peut enlever l'objet (on doit toujours respecter les cd)*/
                 /*On l'enlève*/
                 Drop(mkp, copieS, i);
                 /*Puis on reparcours la liste des objets pour savoir quel objet remettre*/
                 for (j = 1; j <= mkp->n; j++) {
-                    timeout(start, temps);
+                    /*timeout(startTime, tempsMax);*/
                     /*Si l'objet n'est pas celui qu'on vient de retirer et si l'objet j n'est pas dans le sac,
                     et qu'on peut l'ajouter en respectant les contraintes
                     et que le mouvement drop i / add j n'est pas dans la liste tabou*/
@@ -485,7 +557,7 @@ Solution *parcoursVoisin (tp_Mkp *mkp, Solution *sInitiale, int parcoursAllvoisi
                                 sInitiale = NULL;
                                 free(solLessDegrading);
                                 free(solutionall);
-                                return parcoursVoisin(mkp, copieS, parcoursAllvoisin, bestS, listTabou, cptForTabou, cptTotal, start, temps);
+                                return parcoursVoisin(mkp, copieS, parcoursAllvoisin, bestS, listTabou, cptForTabou, cptTotal, startTime, tempsMax, instance, outputFileName, globalBestS);
                             }
                         }
                         else {
@@ -536,7 +608,7 @@ Solution *parcoursVoisin (tp_Mkp *mkp, Solution *sInitiale, int parcoursAllvoisi
         free(solLessDegrading);
         free(solutionall);
         if (cptForTabou < 3000) {
-            return parcoursVoisin(mkp, copieS, parcoursAllvoisin, bestS, listTabou, cptForTabou + 1, cptTotal + 1, start, temps);
+            return parcoursVoisin(mkp, copieS, parcoursAllvoisin, bestS, listTabou, cptForTabou + 1, cptTotal + 1, startTime, tempsMax, instance, outputFileName, globalBestS);
         }
         if (bestS != copieS) {
             free(copieS);
@@ -548,15 +620,18 @@ Solution *parcoursVoisin (tp_Mkp *mkp, Solution *sInitiale, int parcoursAllvoisi
 }
 
 int main(int argc, char *argv[]) {
-    int start = (int)time(NULL);
+    srand(time(NULL));
+    int startTime = (int)time(NULL);
     tp_Mkp *mkp = NULL;
-    Solution *sol = NULL, *sAmeliorante = NULL, *sInitiale = NULL;
+    Solution *sol = NULL, *sAmeliorante = NULL, *bestS = NULL;
 	if(argc != 4) {
 		printf("Usage: programme nomFichierEntree nomFichierSortie tempsEnSeconde\n");
 		exit(0);
     }
     mkp = tp_load_mkp(argv[1]);
-    int temps = atoi(argv[3]);
+    int tempsMax = atoi(argv[3]);
+    char *outputFileName = argv[2];
+    char *instance = argv[1];
 
     /*Init liste tabou*/
     ListTabou *listTabou = init_tabou_list(15);
@@ -573,7 +648,7 @@ int main(int argc, char *argv[]) {
 	printf("slack cd : %d\n", sol->slack[1][0]);
 
 	/*Il faut maintenant retirer les objets jusqu'à ce que la solution soit réalisable*/
-	int isNoSolution = obtenirSolutionRealisable(mkp, sol);
+	int isNoSolution = obtenirSolutionRealisable(mkp, sol, 0);
 
     printf("Pas de solution ? %d\n", isNoSolution);
     printf("Object value : %d\n", sol->objValue);
@@ -583,11 +658,42 @@ int main(int argc, char *argv[]) {
     /*Maintenant on recherche une solution améliorante*/
 
     /*copie de la sol initiale parce que s va surement être désalloué par parcoursVoisin*/
-    sInitiale = copieSolution(mkp, sol);
+    bestS = copieSolution(mkp, sol);
     printf("Calcul en cours, patientez...\n");
-    sAmeliorante = parcoursVoisin(mkp, sol, 0, sol, listTabou, 0, 0, start, temps);
+
+    /**
+    on va chercher des solutions, tant qu'on a du temps, on va d'abord utiliser la solution initiale qu'on vient de construire
+    Puis on utilisera d'autres algorithmes afin de partir avec de nouvelles solutions initiales
+    Une fois qu'on aura utilisé tous nos algos, on fera du random
+    **/
+    while(timeout(startTime, tempsMax, bestS, sAmeliorante, instance, outputFileName, mkp)) {
+        timeout(startTime, tempsMax, bestS, sAmeliorante, instance, outputFileName, mkp);
+        printf("recherche d'une solution\n");
+        sAmeliorante = parcoursVoisin(mkp, sol, 0, sol, listTabou, 0, 0, startTime, tempsMax, instance, outputFileName, bestS);
+        printf("solution trouvée résultat de la fonction objectif : %d\n", sAmeliorante->objValue);
+        //On garde la meilleure des solutions entre bestS et sAmeliorante
+        if (sAmeliorante->objValue > bestS->objValue) {
+            //On a trouvé mieux
+            free_sol(bestS);
+            bestS = sAmeliorante;
+            sAmeliorante = NULL;
+        }
+        else {
+            free_sol(sAmeliorante);
+            sAmeliorante = NULL;
+        }
+
+        //On reconstruit une nouvelle solution initiale, normalement sol est libérée durant le parcours
+        sol = NULL;
+        sol = alloc_sol(mkp);
+        init_sol(sol, mkp);
+        remplirSac(mkp, sol);
+        obtenirSolutionRealisable(mkp, sol, 0);
+        //On est prêt pour recommencer
+    }
+
     /*Affichage du résultat de la recherche de solution améliorante*/
-    printf("Ancienne value du sac : %d\n", sInitiale->objValue);
+    /*printf("Ancienne value du sac : %d\n", sInitiale->objValue);
 
     if (sAmeliorante != NULL && sInitiale->objValue != 0) {
         printf("Nouvelle value du sac : %d\n", sAmeliorante->objValue);
@@ -605,13 +711,13 @@ int main(int argc, char *argv[]) {
             output_best_solution(sInitiale,argv[1],mkp->n,argv[2]);
             printf("Solution non ameliorante...\n");
         }
-    }
+    }*/
 
     /*Libération de la mémoire*/
     free(listTabou->list);
     listTabou->list = NULL;
     free(listTabou);
-    free_sol(sInitiale);
+    free_sol(bestS);
     free_sol(sAmeliorante);
     free(sol);
     tp_del_mkp(mkp);
