@@ -41,7 +41,7 @@ int timeout(int startTime, int tempsMax, Solution *sAmeliorante, Solution *curre
     int currentTime = (int)time(NULL);
     if( (currentTime - startTime) >= tempsMax ){
         printf("\n\n**********************************************\nTemps ecoule !\n");
-        //On écrit la meilleure solution qu'on ait
+        /*On écrit la meilleure solution qu'on ait*/
         if (sAmeliorante->objValue >= currentSolution->objValue) {
             printf("La meilleure solution trouvee a pour resultat : %d\n", sAmeliorante->objValue);
             output_best_solution(sAmeliorante,instance,mkp->n,outputFileName);
@@ -294,6 +294,7 @@ void *remplirSac (tp_Mkp *mkp, Solution *s) {
 	return 0;
 }
 
+
 /**
 Méthode permettant d'obtenir une solution réalisable à partir d'une solution non réalisable où tout les objets sont pris dans la solution
 Renvoie 1 si on n'a pas trouvé de solution réalisable, 0 sinon
@@ -301,6 +302,7 @@ Renvoie 1 si on n'a pas trouvé de solution réalisable, 0 sinon
 int obtenirSolutionRealisable (tp_Mkp *mkp, Solution *s, int algoToUse) {
     int isNoSolution = 0;
     int i = 0;
+
     /*On récupère l'ordre par lequel on va retirer les objets*/
     int *ordre;
     ordre = malloc(sizeof (int) * (mkp->n + 1));
@@ -644,17 +646,8 @@ int main(int argc, char *argv[]) {
 	Puis on va retirer les objets 1 à 1 pour arriver à une solution réalisable*/
 	remplirSac(mkp, sol);
 
-	printf("Object value : %d\n", sol->objValue);
-	printf("slack cc : %d\n", sol->slack[0][0]);
-	printf("slack cd : %d\n", sol->slack[1][0]);
-
 	/*Il faut maintenant retirer les objets jusqu'à ce que la solution soit réalisable*/
-	int isNoSolution = obtenirSolutionRealisable(mkp, sol, 0);
-
-    printf("Pas de solution ? %d\n", isNoSolution);
-    printf("Object value : %d\n", sol->objValue);
-	printf("slack cc : %d\n", sol->slack[0][0]);
-	printf("slack cd : %d\n", sol->slack[1][0]);
+	obtenirSolutionRealisable(mkp, sol, 0);
 
     /*Maintenant on recherche une solution améliorante*/
 
@@ -693,7 +686,7 @@ int main(int argc, char *argv[]) {
         remplirSac(mkp, sol);
         obtenirSolutionRealisable(mkp, sol, cpt);
         cpt++;
-        //On est prêt pour recommencer
+        /*On est prêt pour recommencer*/
     }
     /*Libération de la mémoire*/
     /*On ne devrait plus passer ici...*/

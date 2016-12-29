@@ -40,18 +40,19 @@ typedef struct {
 int timeout(int startTime, int tempsMax, Solution *sAmeliorante, Solution *currentSolution, char *instance, char *outputFileName, tp_Mkp *mkp){
     int currentTime = (int)time(NULL);
     if( (currentTime - startTime) >= tempsMax ){
-        //On écrit la meilleure solution qu'on ait
+        printf("\n\n**********************************************\nTemps ecoule !\n");
+        /*On écrit la meilleure solution qu'on ait*/
         if (sAmeliorante->objValue >= currentSolution->objValue) {
-            printf("Nouvelle value du sac : %d\n", sAmeliorante->objValue);
+            printf("La meilleure solution trouvee a pour resultat : %d\n", sAmeliorante->objValue);
             output_best_solution(sAmeliorante,instance,mkp->n,outputFileName);
         }
         else {
-            printf("Nouvelle value du sac : %d\n", sAmeliorante->objValue);
+            printf("La meilleure solution trouvee a pour resultat : %d\n", sAmeliorante->objValue);
             output_best_solution(currentSolution,instance,mkp->n,outputFileName);
         }
         free_sol(sAmeliorante);
         free_sol(currentSolution);
-        printf("Temps ecoule. Game Over.\n");
+        printf("Bye Bye\n");
         /* Our code run out of time friends :-( */
         exit(999);
     }
@@ -293,6 +294,7 @@ void *remplirSac (tp_Mkp *mkp, Solution *s) {
 	return 0;
 }
 
+
 /**
 Méthode permettant d'obtenir une solution réalisable à partir d'une solution non réalisable où tout les objets sont pris dans la solution
 Renvoie 1 si on n'a pas trouvé de solution réalisable, 0 sinon
@@ -300,6 +302,7 @@ Renvoie 1 si on n'a pas trouvé de solution réalisable, 0 sinon
 int obtenirSolutionRealisable (tp_Mkp *mkp, Solution *s, int algoToUse) {
     int isNoSolution = 0;
     int i = 0;
+
     /*On récupère l'ordre par lequel on va retirer les objets*/
     int *ordre;
     ordre = malloc(sizeof (int) * (mkp->n + 1));
@@ -643,17 +646,8 @@ int main(int argc, char *argv[]) {
 	Puis on va retirer les objets 1 à 1 pour arriver à une solution réalisable*/
 	remplirSac(mkp, sol);
 
-	printf("Object value : %d\n", sol->objValue);
-	printf("slack cc : %d\n", sol->slack[0][0]);
-	printf("slack cd : %d\n", sol->slack[1][0]);
-
 	/*Il faut maintenant retirer les objets jusqu'à ce que la solution soit réalisable*/
-	int isNoSolution = obtenirSolutionRealisable(mkp, sol, 0);
-
-    printf("Pas de solution ? %d\n", isNoSolution);
-    printf("Object value : %d\n", sol->objValue);
-	printf("slack cc : %d\n", sol->slack[0][0]);
-	printf("slack cd : %d\n", sol->slack[1][0]);
+	obtenirSolutionRealisable(mkp, sol, 0);
 
     /*Maintenant on recherche une solution améliorante*/
 
@@ -666,14 +660,16 @@ int main(int argc, char *argv[]) {
     Puis on utilisera d'autres algorithmes afin de partir avec de nouvelles solutions initiales
     Une fois qu'on aura utilisé tous nos algos, on fera du random
     **/
+    /*on utilise un compteur pour le choix des tris pour la solution initiale à plus de 5 en passe en choix random*/
+    int cpt = 1;
     while(timeout(startTime, tempsMax, bestS, sAmeliorante, instance, outputFileName, mkp)) {
         timeout(startTime, tempsMax, bestS, sAmeliorante, instance, outputFileName, mkp);
-        printf("recherche d'une solution\n");
-        sAmeliorante = parcoursVoisin(mkp, sol, 0, sol, listTabou, 0, 0, startTime, tempsMax, instance, outputFileName, bestS);
-        printf("solution trouvée résultat de la fonction objectif : %d\n", sAmeliorante->objValue);
-        //On garde la meilleure des solutions entre bestS et sAmeliorante
+        printf("recherche d'une solution...\n");
+        sAmeliorante = parcoursVoisin(mkp, sol, 1, sol, listTabou, 0, 0, startTime, tempsMax, instance, outputFileName, bestS);
+        printf("solution trouvee resultat de la fonction objectif : %d\n\n", sAmeliorante->objValue);
+        /*On garde la meilleure des solutions entre bestS et sAmeliorante*/
         if (sAmeliorante->objValue > bestS->objValue) {
-            //On a trouvé mieux
+            /*On a trouvé mieux*/
             free_sol(bestS);
             bestS = sAmeliorante;
             sAmeliorante = NULL;
@@ -683,37 +679,17 @@ int main(int argc, char *argv[]) {
             sAmeliorante = NULL;
         }
 
-        //On reconstruit une nouvelle solution initiale, normalement sol est libérée durant le parcours
+        /*On reconstruit une nouvelle solution initiale, normalement sol est libérée durant le parcours*/
         sol = NULL;
         sol = alloc_sol(mkp);
         init_sol(sol, mkp);
         remplirSac(mkp, sol);
-        obtenirSolutionRealisable(mkp, sol, 0);
-        //On est prêt pour recommencer
+        obtenirSolutionRealisable(mkp, sol, cpt);
+        cpt++;
+        /*On est prêt pour recommencer*/
     }
-
-    /*Affichage du résultat de la recherche de solution améliorante*/
-    /*printf("Ancienne value du sac : %d\n", sInitiale->objValue);
-
-    if (sAmeliorante != NULL && sInitiale->objValue != 0) {
-        printf("Nouvelle value du sac : %d\n", sAmeliorante->objValue);
-        output_best_solution(sAmeliorante,argv[1],mkp->n,argv[2]);
-        if(sInitiale->objValue == sAmeliorante->objValue)
-            printf("Solution non ameliorante...\n");
-    }
-    else {
-        if(!sInitiale->objValue) {
-            printf("Pas de solution...\n");
-            if(is_add_P(mkp)) record(argv[1], "w", "Pas de solution à ce problème...\n", argv[2]);
-            else record(argv[1], "a", "Pas de solution à ce problème...\n", argv[2]);
-        }
-        else {
-            output_best_solution(sInitiale,argv[1],mkp->n,argv[2]);
-            printf("Solution non ameliorante...\n");
-        }
-    }*/
-
     /*Libération de la mémoire*/
+    /*On ne devrait plus passer ici...*/
     free(listTabou->list);
     listTabou->list = NULL;
     free(listTabou);
