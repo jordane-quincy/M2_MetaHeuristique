@@ -40,18 +40,19 @@ typedef struct {
 int timeout(int startTime, int tempsMax, Solution *sAmeliorante, Solution *currentSolution, char *instance, char *outputFileName, tp_Mkp *mkp){
     int currentTime = (int)time(NULL);
     if( (currentTime - startTime) >= tempsMax ){
+        printf("\n\n**********************************************\nTemps ecoule !\n");
         //On écrit la meilleure solution qu'on ait
         if (sAmeliorante->objValue >= currentSolution->objValue) {
-            printf("Nouvelle value du sac : %d\n", sAmeliorante->objValue);
+            printf("La meilleure solution trouvee a pour resultat : %d\n", sAmeliorante->objValue);
             output_best_solution(sAmeliorante,instance,mkp->n,outputFileName);
         }
         else {
-            printf("Nouvelle value du sac : %d\n", sAmeliorante->objValue);
+            printf("La meilleure solution trouvee a pour resultat : %d\n", sAmeliorante->objValue);
             output_best_solution(currentSolution,instance,mkp->n,outputFileName);
         }
         free_sol(sAmeliorante);
         free_sol(currentSolution);
-        printf("Temps ecoule. Game Over.\n");
+        printf("Bye Bye\n");
         /* Our code run out of time friends :-( */
         exit(999);
     }
@@ -670,12 +671,12 @@ int main(int argc, char *argv[]) {
     int cpt = 1;
     while(timeout(startTime, tempsMax, bestS, sAmeliorante, instance, outputFileName, mkp)) {
         timeout(startTime, tempsMax, bestS, sAmeliorante, instance, outputFileName, mkp);
-        printf("recherche d'une solution\n");
+        printf("recherche d'une solution...\n");
         sAmeliorante = parcoursVoisin(mkp, sol, 1, sol, listTabou, 0, 0, startTime, tempsMax, instance, outputFileName, bestS);
-        printf("solution trouvée résultat de la fonction objectif : %d\n", sAmeliorante->objValue);
-        //On garde la meilleure des solutions entre bestS et sAmeliorante
+        printf("solution trouvee resultat de la fonction objectif : %d\n\n", sAmeliorante->objValue);
+        /*On garde la meilleure des solutions entre bestS et sAmeliorante*/
         if (sAmeliorante->objValue > bestS->objValue) {
-            //On a trouvé mieux
+            /*On a trouvé mieux*/
             free_sol(bestS);
             bestS = sAmeliorante;
             sAmeliorante = NULL;
@@ -685,7 +686,7 @@ int main(int argc, char *argv[]) {
             sAmeliorante = NULL;
         }
 
-        //On reconstruit une nouvelle solution initiale, normalement sol est libérée durant le parcours
+        /*On reconstruit une nouvelle solution initiale, normalement sol est libérée durant le parcours*/
         sol = NULL;
         sol = alloc_sol(mkp);
         init_sol(sol, mkp);
@@ -694,29 +695,8 @@ int main(int argc, char *argv[]) {
         cpt++;
         //On est prêt pour recommencer
     }
-
-    /*Affichage du résultat de la recherche de solution améliorante*/
-    /*printf("Ancienne value du sac : %d\n", sInitiale->objValue);
-
-    if (sAmeliorante != NULL && sInitiale->objValue != 0) {
-        printf("Nouvelle value du sac : %d\n", sAmeliorante->objValue);
-        output_best_solution(sAmeliorante,argv[1],mkp->n,argv[2]);
-        if(sInitiale->objValue == sAmeliorante->objValue)
-            printf("Solution non ameliorante...\n");
-    }
-    else {
-        if(!sInitiale->objValue) {
-            printf("Pas de solution...\n");
-            if(is_add_P(mkp)) record(argv[1], "w", "Pas de solution à ce problème...\n", argv[2]);
-            else record(argv[1], "a", "Pas de solution à ce problème...\n", argv[2]);
-        }
-        else {
-            output_best_solution(sInitiale,argv[1],mkp->n,argv[2]);
-            printf("Solution non ameliorante...\n");
-        }
-    }*/
-
     /*Libération de la mémoire*/
+    /*On ne devrait plus passer ici...*/
     free(listTabou->list);
     listTabou->list = NULL;
     free(listTabou);
