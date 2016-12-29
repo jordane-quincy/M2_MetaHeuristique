@@ -663,7 +663,6 @@ int main(int argc, char *argv[]) {
     /*on utilise un compteur pour le choix des tris pour la solution initiale à plus de 5 en passe en choix random*/
     int cpt = 1;
     while(timeout(startTime, tempsMax, bestS, sAmeliorante, instance, outputFileName, mkp)) {
-        timeout(startTime, tempsMax, bestS, sAmeliorante, instance, outputFileName, mkp);
         printf("recherche d'une solution...\n");
         sAmeliorante = parcoursVoisin(mkp, sol, 1, sol, listTabou, 0, 0, startTime, tempsMax, instance, outputFileName, bestS);
         printf("solution trouvee resultat de la fonction objectif : %d\n\n", sAmeliorante->objValue);
