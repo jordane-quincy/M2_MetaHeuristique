@@ -10,3 +10,8 @@ Sous windows : (Vérifier que MinGW est bien installé et que MinGW/bin est présen
 Il faut se positionner dans le dossier où l'archive a été dézippée (grace à la console) puis taper "mingw32-make" dans la console afin d'exécuter le makefile
 puis pour exécuter le programme il faut taper miniprojet_1 dans la console avec les arguments, le programme se lance
 (Il y a des warning lors du make mais ils n'empèchent pas l'exécution du programme)
+
+Comme voulu d'après le sujet, il y a 3 arguments à ajouter au lancement du programme.
+1er argument : chemin de l'instance
+2ème argument : fichier de sortie
+3ème argument : temps accordé en secondes
