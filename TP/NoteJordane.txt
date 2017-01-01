@@ -1,0 +1,29 @@
+Jordane => 
+-Mise en place parcours tous les voisins
+	-Fuites mémoires (logiciel)
+Lors de la phase d'implémentation, nous nous sommes rendus compte que l'exécution pouvait s'arrêter brutablement même sur de petites instances.
+La première approche fut de parcourir manuellement le code afin de débusquer les fuites mémoires présentes, cela a permis d'éliminer les plus évidentes
+mais le programme crasher toujours.
+Nous avons donc dû passer au niveau supérieur en cherchant des outils spécialisés dans l'analyse de fuite mémoire et nous avons selectionné l'outil Dr. Memory.
+Les rapports fournit par Dr. Memory nous ont permis d'éliminer de nombreuses fuites mémoires mais des erreurs continuaient d'apparaitre dans les logs.
+Au final nous nous sommes rendus compte que les plantages n'étaient plus dû aux fuites mémoires mais aux limites de la pile.
+Nous faisions des appels récursifs trop nombreux ce qui provoqué un débordement de la pile d'exécution et donc un plantage.
+Nous aurions pu revoir profondément notre application pour passer à un fonctionnement itératif mais
+Nos tests ont montré que diminué le nombre d'appels récursifs était suffisant pour contourner le problème sans impacter négativement les résultats.
+
+
+	-Timeout
+Le sujet nous imposait de pouvoir limité la durée d'exécution de notre programme.
+La gestion du temps à implémenter ne faisant pas intervenir de fuseaux horaires ou de calcul complexe, la solution retenue a été d'utiliser un timestamp.
+Nous avons donc créer une fonction timeout qui retourne vrai tant que le temps imparti n'est pas écoulé, cette manière de procéder nous permet
+de tester de nouvelles solutions initiales en changeant notre démarche et de continuer de chercher des solutions tant qu'il reste du temps.
+Une fois le temps écoulé, la meilleure solution est écrite dans le fichier de sortie.
+
+
+	-Ecrire dans la solution dans un fichier
+La fonction output_best_solution prend en paramètre la Solution, le nom du fichier en entrée, le nombre de variables et le nom du fichier en sortie.
+Nous ouvrons un pointeur sur le fichier de sortie pour y inscrire  :
+le nom du fichier en entree sur la première ligne,
+le nombre de d'objets sur la seconde ligne,
+la troisième ligne est formée de 1 et de 0 selon que l'on prend ou pas chaque objet,
+et enfin la ligne 4 qui contient la valeur de la meilleure solution trouvée.
