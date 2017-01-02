@@ -3,7 +3,7 @@ Jordane =>
 	-Fuites mémoires (logiciel)
 Lors de la phase d'implémentation, nous nous sommes rendus compte que l'exécution pouvait s'arrêter brutablement même sur de petites instances.
 La première approche fut de parcourir manuellement le code afin de débusquer les fuites mémoires présentes, cela a permis d'éliminer les plus évidentes
-mais le programme crasher toujours.
+mais le programme crashait toujours.
 Nous avons donc dû passer au niveau supérieur en cherchant des outils spécialisés dans l'analyse de fuite mémoire et nous avons selectionné l'outil Dr. Memory.
 Les rapports fournit par Dr. Memory nous ont permis d'éliminer de nombreuses fuites mémoires mais des erreurs continuaient d'apparaitre dans les logs.
 Au final nous nous sommes rendus compte que les plantages n'étaient plus dû aux fuites mémoires mais aux limites de la pile.
