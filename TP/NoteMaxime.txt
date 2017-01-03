@@ -1,0 +1,17 @@
+Maxime super notes
+
+	-Structure de données
+Lors du travail dirigé nous avons travaillé sur le probleme du sac à dos pour les contraintes de capacité, pour le travail pratique il nous a été demandé
+de travailler sur le meme genre de probleme mais en ajoutant des contraintes de demande.
+C'est pourquoi nous avons modifier tout le code existant afin que les differentes structures et fonctions puissent prendre en compte les contraintes de demande.
+Les differentes matrices utilisées ont donc vu leur mémoires réallouées.
+
+
+	-Instanciation et solution
+Dans la continuité des modifications apportées, nous avons mis en place une fonction permettant la lecture des fichiers afin d'instancier le sac à dos;
+c'est à dire enregistrer les contraintes de capacités, de demandes et finalement remplir le sac. Remplir le sac permet par la suite de retirer les objets
+jusqu'à ce que les contraintes de demandes soient validées; ceci permettant d'obtenir une premiere solution.
+Le choix des objets à retirer est effectuer par l'étude du ratio dans une fonction getTableauOrdonneByDemandeEtCapacite() mais qui a par la suite été modifiées pour laisser place à une plus grande diversitée de fonctions pour le calcul des differents coefficiants.
+
+
+	-Mise en place parcours tous les voisins
